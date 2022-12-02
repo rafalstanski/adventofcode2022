@@ -69,6 +69,7 @@ private class RoundCalculator {
         (Scissors to Rock) to Win,
         (Scissors to Paper) to Lost,
     )
+
     fun calculate(roundStrategy: RoundStrategy): Int {
         val round = roundStrategy.opponentChoice to roundStrategy.response
         val roundOutcome = rules[round] ?: throw IllegalStateException("Unknown round: $round")
@@ -76,4 +77,3 @@ private class RoundCalculator {
         return roundStrategy.response.score + roundOutcome.score
     }
 }
-
