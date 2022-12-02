@@ -42,7 +42,7 @@ class RoundCalculator {
             .let(gameRules::findRules)
             .single()
 
-        return foundRule.ourResponse.score + roundStrategy.expectedRoundOutcome.score
+        return foundRule.ourResponse + roundStrategy.expectedRoundOutcome
     }
 
     private fun searchByOpponentChoiceAndRoundOutcome(roundStrategy: RoundStrategy): RuleFilter =

@@ -7,11 +7,18 @@ import pl.rstanski.adventofcode2022.day02.common.Shape.Paper
 import pl.rstanski.adventofcode2022.day02.common.Shape.Rock
 import pl.rstanski.adventofcode2022.day02.common.Shape.Scissors
 
-enum class Shape(val score: Int) {
+interface ScoreAware {
+    val score: Int
+
+    operator fun plus(secondScoreAware: ScoreAware): Int =
+        this.score + secondScoreAware.score
+}
+
+enum class Shape(override val score: Int) : ScoreAware {
     Rock(1), Paper(2), Scissors(3)
 }
 
-enum class RoundOutcome(val score: Int) {
+enum class RoundOutcome(override val score: Int) : ScoreAware {
     Lost(0), Draw(3), Win(6)
 }
 

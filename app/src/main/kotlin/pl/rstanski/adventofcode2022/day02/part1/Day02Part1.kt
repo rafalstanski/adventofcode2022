@@ -41,14 +41,14 @@ private class RoundStrategyParser {
 
         return RoundStrategy(
             opponentChoice = parts[0].opponentChoiceAsShape(),
-            response = parts[1].ourResponseAsShape()
+            ourResponse = parts[1].ourResponseAsShape()
         )
     }
 }
 
 private data class RoundStrategy(
     val opponentChoice: Shape,
-    val response: Shape
+    val ourResponse: Shape
 )
 
 
@@ -59,10 +59,10 @@ private class RoundCalculator {
             .let(gameRules::findRules)
             .single()
 
-        return roundStrategy.response.score + foundRule.roundOutcome.score
+        return roundStrategy.ourResponse + foundRule.roundOutcome
     }
 
     private fun searchByOpponentChoiceAndOurResponse(roundStrategy: RoundStrategy): RuleFilter =
         FindByOpponentChoice(roundStrategy.opponentChoice)
-            .and(FindByOurResponse(roundStrategy.response))
+            .and(FindByOurResponse(roundStrategy.ourResponse))
 }
