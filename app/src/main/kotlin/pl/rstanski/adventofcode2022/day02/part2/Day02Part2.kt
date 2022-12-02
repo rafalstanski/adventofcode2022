@@ -2,9 +2,15 @@ package pl.rstanski.adventofcode2022.day02.part2
 
 import pl.rstanski.adventofcode2022.common.Puzzle
 import pl.rstanski.adventofcode2022.common.PuzzleLoader
-import pl.rstanski.adventofcode2022.day02.part2.RoundOutcome.Draw
-import pl.rstanski.adventofcode2022.day02.part2.RoundOutcome.Lost
-import pl.rstanski.adventofcode2022.day02.part2.RoundOutcome.Win
+import pl.rstanski.adventofcode2022.day02.common.FindByOpponentChoice
+import pl.rstanski.adventofcode2022.day02.common.FindByRoundOutcome
+import pl.rstanski.adventofcode2022.day02.common.RoundOutcome
+import pl.rstanski.adventofcode2022.day02.common.Rule
+import pl.rstanski.adventofcode2022.day02.common.RuleFilter
+import pl.rstanski.adventofcode2022.day02.common.Shape
+import pl.rstanski.adventofcode2022.day02.common.asRoundOutcome
+import pl.rstanski.adventofcode2022.day02.common.gameRules
+import pl.rstanski.adventofcode2022.day02.common.opponentChoiceAsShape
 
 private const val PUZZLE_FILENAME = "day02/day02.txt"
 
@@ -31,26 +37,17 @@ object Day02Part1Solution {
 
 class RoundCalculator {
 
-    private val rules : Map<Pair<OpponentChoiceType, ResponseType>, RoundOutcome> = mapOf(
-        (OpponentChoiceType.Rock to ResponseType.Rock) to Draw,
-        (OpponentChoiceType.Paper to ResponseType.Paper) to Draw,
-        (OpponentChoiceType.Scissors to ResponseType.Scissors) to Draw,
-        (OpponentChoiceType.Rock to ResponseType.Paper) to Win,
-        (OpponentChoiceType.Rock to ResponseType.Scissors) to Lost,
-        (OpponentChoiceType.Paper to ResponseType.Rock) to Lost,
-        (OpponentChoiceType.Paper to ResponseType.Scissors) to Win,
-        (OpponentChoiceType.Scissors to ResponseType.Rock) to Win,
-        (OpponentChoiceType.Scissors to ResponseType.Paper) to Lost,
-    )
-
     fun calculate(roundStrategy: RoundStrategy): Int {
-        val response: ResponseType = rules
-            .filterValues { roundOutcome -> roundOutcome == roundStrategy.expectedRoundOutcome }
-            .filterKeys { round -> round.first == roundStrategy.opponentChoice }
-            .keys.first().second
+        val foundRule: Rule = searchByOpponentChoiceAndRoundOutcome(roundStrategy)
+            .let(gameRules::findRules)
+            .single()
 
-        return response.score + roundStrategy.expectedRoundOutcome.score
+        return foundRule.ourResponse.score + roundStrategy.expectedRoundOutcome.score
     }
+
+    private fun searchByOpponentChoiceAndRoundOutcome(roundStrategy: RoundStrategy): RuleFilter =
+        FindByOpponentChoice(roundStrategy.opponentChoice)
+            .and(FindByRoundOutcome(roundStrategy.expectedRoundOutcome))
 }
 
 class RoundStrategyParser {
@@ -59,49 +56,13 @@ class RoundStrategyParser {
         val parts: List<String> = line.split(" ")
 
         return RoundStrategy(
-            opponentChoice = OpponentChoiceType.toType(parts[0]),
-            expectedRoundOutcome = RoundOutcome.toType(parts[1])
+            opponentChoice = parts[0].opponentChoiceAsShape(),
+            expectedRoundOutcome = parts[1].asRoundOutcome()
         )
     }
 }
 
 data class RoundStrategy(
-    val opponentChoice: OpponentChoiceType,
+    val opponentChoice: Shape,
     val expectedRoundOutcome: RoundOutcome
 )
-
-enum class OpponentChoiceType(private val sign: String) {
-    Rock("A"), Paper("B"), Scissors("C");
-
-    companion object {
-        fun toType(sign: String): OpponentChoiceType {
-            return values()
-                .find { it.sign == sign }
-                ?: throw IllegalArgumentException("Unknown sign for OpponentChoice: $sign")
-        }
-    }
-}
-
-enum class ResponseType(private val sign: String, val score: Int) {
-    Rock("X", 1), Paper("Y", 2), Scissors("Z", 3);
-
-    companion object {
-        fun toType(sign: String): ResponseType {
-            return values()
-                .find { it.sign == sign }
-                ?: throw IllegalArgumentException("Unknown sign for Response: $sign")
-        }
-    }
-}
-
-enum class RoundOutcome(private val sign: String, val score: Int) {
-    Lost("X", 0), Draw("Y", 3), Win("Z", 6);
-
-    companion object {
-        fun toType(sign: String): RoundOutcome {
-            return values()
-                .find { it.sign == sign }
-                ?: throw IllegalArgumentException("Unknown sign for RoundOutcome: $sign")
-        }
-    }
-}

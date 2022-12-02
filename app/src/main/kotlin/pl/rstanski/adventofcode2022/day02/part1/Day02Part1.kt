@@ -2,14 +2,12 @@ package pl.rstanski.adventofcode2022.day02.part1
 
 import pl.rstanski.adventofcode2022.common.Puzzle
 import pl.rstanski.adventofcode2022.common.PuzzleLoader
-import pl.rstanski.adventofcode2022.day02.common.RoundOutcome
-import pl.rstanski.adventofcode2022.day02.common.RoundOutcome.Draw
-import pl.rstanski.adventofcode2022.day02.common.RoundOutcome.Lost
-import pl.rstanski.adventofcode2022.day02.common.RoundOutcome.Win
+import pl.rstanski.adventofcode2022.day02.common.FindByOpponentChoice
+import pl.rstanski.adventofcode2022.day02.common.FindByOurResponse
+import pl.rstanski.adventofcode2022.day02.common.Rule
+import pl.rstanski.adventofcode2022.day02.common.RuleFilter
 import pl.rstanski.adventofcode2022.day02.common.Shape
-import pl.rstanski.adventofcode2022.day02.common.Shape.Paper
-import pl.rstanski.adventofcode2022.day02.common.Shape.Rock
-import pl.rstanski.adventofcode2022.day02.common.Shape.Scissors
+import pl.rstanski.adventofcode2022.day02.common.gameRules
 import pl.rstanski.adventofcode2022.day02.common.opponentChoiceAsShape
 import pl.rstanski.adventofcode2022.day02.common.ourResponseAsShape
 
@@ -53,27 +51,18 @@ private data class RoundStrategy(
     val response: Shape
 )
 
+
 private class RoundCalculator {
 
-    private val rules: Map<Pair<Shape, Shape>, RoundOutcome> = mapOf(
-        (Rock to Rock) to Draw,
-        (Paper to Paper) to Draw,
-        (Scissors to Scissors) to Draw,
-
-        (Rock to Paper) to Win,
-        (Rock to Scissors) to Lost,
-
-        (Paper to Rock) to Lost,
-        (Paper to Scissors) to Win,
-
-        (Scissors to Rock) to Win,
-        (Scissors to Paper) to Lost,
-    )
-
     fun calculate(roundStrategy: RoundStrategy): Int {
-        val round = roundStrategy.opponentChoice to roundStrategy.response
-        val roundOutcome = rules[round] ?: throw IllegalStateException("Unknown round: $round")
+        val foundRule: Rule = searchByOpponentChoiceAndOurResponse(roundStrategy)
+            .let(gameRules::findRules)
+            .single()
 
-        return roundStrategy.response.score + roundOutcome.score
+        return roundStrategy.response.score + foundRule.roundOutcome.score
     }
+
+    private fun searchByOpponentChoiceAndOurResponse(roundStrategy: RoundStrategy): RuleFilter =
+        FindByOpponentChoice(roundStrategy.opponentChoice)
+            .and(FindByOurResponse(roundStrategy.response))
 }

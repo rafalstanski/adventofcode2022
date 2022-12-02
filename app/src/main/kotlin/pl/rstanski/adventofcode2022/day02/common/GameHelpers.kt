@@ -1,6 +1,9 @@
 package pl.rstanski.adventofcode2022.day02.common
 
 import java.util.function.Predicate
+import pl.rstanski.adventofcode2022.day02.common.RoundOutcome.Draw
+import pl.rstanski.adventofcode2022.day02.common.RoundOutcome.Lost
+import pl.rstanski.adventofcode2022.day02.common.RoundOutcome.Win
 import pl.rstanski.adventofcode2022.day02.common.Shape.Paper
 import pl.rstanski.adventofcode2022.day02.common.Shape.Rock
 import pl.rstanski.adventofcode2022.day02.common.Shape.Scissors
@@ -29,16 +32,24 @@ fun String.ourResponseAsShape(): Shape =
         else -> throw IllegalArgumentException("Unknown sign for Response: $this")
     }
 
+fun String.asRoundOutcome(): RoundOutcome =
+    when (this) {
+        "X" -> Lost
+        "Y" -> Draw
+        "Z" -> Win
+        else -> throw IllegalArgumentException("Unknown sign for RoundOutcome: $this")
+    }
+
 val gameRules = Table(listOf(
-    Rule(Rock, Rock, RoundOutcome.Draw),
-    Rule(Paper, Paper, RoundOutcome.Draw),
-    Rule(Scissors, Scissors, RoundOutcome.Draw),
-    Rule(Rock, Paper, RoundOutcome.Win),
-    Rule(Rock, Scissors, RoundOutcome.Lost),
-    Rule(Paper, Rock, RoundOutcome.Lost),
-    Rule(Paper, Scissors, RoundOutcome.Win),
-    Rule(Scissors, Rock, RoundOutcome.Win),
-    Rule(Scissors, Paper, RoundOutcome.Lost),
+    Rule(Rock, Rock, Draw),
+    Rule(Paper, Paper, Draw),
+    Rule(Scissors, Scissors, Draw),
+    Rule(Rock, Paper, Win),
+    Rule(Rock, Scissors, Lost),
+    Rule(Paper, Rock, Lost),
+    Rule(Paper, Scissors, Win),
+    Rule(Scissors, Rock, Win),
+    Rule(Scissors, Paper, Lost),
 ))
 
 data class Table(
