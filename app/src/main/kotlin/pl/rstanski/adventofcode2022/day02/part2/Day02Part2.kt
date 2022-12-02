@@ -12,26 +12,26 @@ import pl.rstanski.adventofcode2022.day02.common.asRoundOutcome
 import pl.rstanski.adventofcode2022.day02.common.gameRules
 import pl.rstanski.adventofcode2022.day02.common.opponentChoiceAsShape
 
-private const val PUZZLE_FILENAME = "day02/day02.txt"
+private const val PUZZLE_FILENAME = "day02.txt"
 
 fun main() {
     val puzzle: Puzzle = PuzzleLoader.load(PUZZLE_FILENAME)
 
-    val result = Day02Part1Solution.solve(puzzle)
+    val result = Day02Part2Solution.solve(puzzle)
 
     println(result)
 }
 
-object Day02Part1Solution {
+object Day02Part2Solution {
 
     private val roundStrategyParser = RoundStrategyParser()
     private val roundCalculator = RoundCalculator()
 
-    fun solve(puzzle: Puzzle): Any {
+    fun solve(puzzle: Puzzle): Int {
         return puzzle.lines
             .map(roundStrategyParser::parse)
             .map(roundCalculator::calculate)
-            .sumOf { it.toBigInteger() }
+            .sum()
     }
 }
 
