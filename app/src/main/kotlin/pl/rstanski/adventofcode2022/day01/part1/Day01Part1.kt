@@ -5,7 +5,7 @@ import pl.rstanski.adventofcode2022.common.PuzzleLoader
 import pl.rstanski.adventofcode2022.day01.common.ElfCalories
 import pl.rstanski.adventofcode2022.day01.common.ElfCaloriesExtractor
 
-private const val PUZZLE_FILENAME = "day01/day01.txt"
+private const val PUZZLE_FILENAME = "day01.txt"
 
 fun main() {
     val puzzle: Puzzle = PuzzleLoader.load(PUZZLE_FILENAME)
