@@ -3,9 +3,9 @@ package pl.rstanski.adventofcode2022.day01.common
 import pl.rstanski.adventofcode2022.common.Puzzle
 import pl.rstanski.adventofcode2022.common.toBigIntegers
 
-class ElfCaloriesExtractor(private val puzzle: Puzzle) {
+class ElfCaloriesExtractor {
 
-    fun extract(): List<ElfCalories> {
+    fun extract(puzzle: Puzzle): List<ElfCalories> {
         val itemsCaloriesIterator = puzzle.lines.iterator()
 
         val currentElfCalories = mutableListOf<String>()
