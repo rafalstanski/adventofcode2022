@@ -2,6 +2,10 @@ package pl.rstanski.adventofcode2022.day03.part2
 
 import pl.rstanski.adventofcode2022.common.Puzzle
 import pl.rstanski.adventofcode2022.common.PuzzleLoader
+import pl.rstanski.adventofcode2022.day03.common.PriorityMapper.priorityOf
+import pl.rstanski.adventofcode2022.day03.common.Rucksack
+import pl.rstanski.adventofcode2022.day03.common.RucksackParser
+import pl.rstanski.adventofcode2022.day03.part2.Grouper.groupRucksacks
 
 private const val PUZZLE_FILENAME = "day03.txt"
 
@@ -16,65 +20,32 @@ fun main() {
 object Day03Part2Solution {
 
     fun solve(puzzle: Puzzle): Int {
-        val rucksacks: List<Rucksack> = puzzle.lines.map(RucksackParser::parseAsRucksack)
-
-        val groups: List<Group> = Grouper.groupRucksacks(rucksacks)
+        val groups: List<Group> = puzzle.lines
+            .map(RucksackParser::parseAsRucksack)
+            .let(::groupRucksacks)
 
         return groups
             .map(Group::commonItem)
             .map { it.single() }
-            .sumOf { PriorityMapper.priorityOf(it) }
+            .sumOf(::priorityOf)
     }
 }
 
 object Grouper {
 
-    fun groupRucksacks(rucksacks: List<Rucksack>): List<Group> =
-        rucksacks.windowed(3, 3)
-            .map { Group(it) }
+    fun groupRucksacks(rucksacks: List<Rucksack>): List<Group> {
+        require(rucksacks.size.mod(3) == 0)
+
+        return rucksacks.windowed(3, 3)
+            .map(::Group)
+    }
 }
 
 data class Group(val rucksacks: List<Rucksack>) {
+
     fun commonItem(): Set<Char> =
         rucksacks
-            .map { it.items }
+            .map(Rucksack::items)
             .map { it.toSet() }
-            .reduce { first, second -> first intersect second }
-}
-
-object RucksackParser {
-    fun parseAsRucksack(line: String): Rucksack =
-        Rucksack(line.toList())
-}
-
-data class Rucksack(val items: List<Char>) {
-    init {
-        require(items.size.mod(2) == 0)
-    }
-
-    val firstCompartment = items.subList(0, items.size / 2)
-
-    val secondCompartment = items.subList(items.size / 2, items.size)
-
-    fun commonItemsInCompartments(): Set<Char> =
-        firstCompartment.intersect(secondCompartment.toSet())
-}
-
-object PriorityMapper {
-
-    private val smallLetters = 'a'..'z'
-    private val bigLetters = 'A'..'Z'
-
-    fun priorityOf(item: Char): Int =
-        when {
-            smallLetters.contains(item) -> calculatePriorityForSmallLetter(item)
-            bigLetters.contains(item) -> calculatePriorityForBigLetter(item)
-            else -> throw IllegalArgumentException("Unknown item: $item")
-        }
-
-    private fun calculatePriorityForSmallLetter(item: Char): Int =
-        item - 'a' + 1
-
-    private fun calculatePriorityForBigLetter(item: Char): Int =
-        item - 'A' + 27
+            .reduce { firstItems, secondItems -> firstItems intersect secondItems }
 }
