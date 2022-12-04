@@ -18,7 +18,7 @@ class Day04Test : BaseTest() {
         //when
         val solution = part1Solution.solve(puzzle)
         //then
-        assertEquals(expected = 0, actual = solution)
+        assertEquals(expected = 2, actual = solution)
     }
 
     @Test
@@ -26,6 +26,6 @@ class Day04Test : BaseTest() {
         //when
         val solution = part2Solution.solve(puzzle)
         //then
-        assertEquals(expected = 0, actual = solution)
+        assertEquals(expected = 4, actual = solution)
     }
 }
