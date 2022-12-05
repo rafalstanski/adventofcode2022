@@ -2,9 +2,11 @@ package pl.rstanski.adventofcode2022.day05.part2
 
 import pl.rstanski.adventofcode2022.common.Puzzle
 import pl.rstanski.adventofcode2022.common.PuzzleLoader
+import pl.rstanski.adventofcode2022.day05.common.CratesStacks
 import pl.rstanski.adventofcode2022.day05.common.CratesStacksBuilder
 import pl.rstanski.adventofcode2022.day05.common.DrawingParser
 import pl.rstanski.adventofcode2022.day05.common.InstructionsBuilder
+import pl.rstanski.adventofcode2022.day05.common.MoveInstruction
 
 private const val PUZZLE_FILENAME = "day05.txt"
 
@@ -23,12 +25,29 @@ object Day05Part2Solution {
         val cratesStacks = CratesStacksBuilder.buildCratesStacks(drawing)
         val instructions = InstructionsBuilder.buildInstructions(drawing)
 
-        instructions.forEach { instruction ->
-            val crates = (1..instruction.cratesNumber).map { cratesStacks.takeCrateFromStack(instruction.from - 1) }
-            crates.reversed().forEach { cratesStacks.putCrateOnStack(instruction.to - 1, it) }
-        }
+        CrateMover9001.moveCrates(cratesStacks, instructions)
 
         return cratesStacks.topCrateFromAllStacks()
             .joinToString("")
     }
+}
+
+object CrateMover9001 {
+
+    fun moveCrates(cratesStacks: CratesStacks, instructions: List<MoveInstruction>) {
+        instructions.forEach { instruction ->
+            runInstruction(instruction, cratesStacks)
+        }
+    }
+
+    private fun runInstruction(instruction: MoveInstruction, cratesStacks: CratesStacks) {
+        val crates = takeCreates(instruction, cratesStacks)
+            .reversed()
+
+        cratesStacks.putCratesOnStack(instruction.toStackNumber, crates)
+    }
+
+    private fun takeCreates(instruction: MoveInstruction, cratesStacks: CratesStacks): List<Char> =
+        (1..instruction.cratesCountToMove)
+            .map { cratesStacks.takeCrateFromStack(instruction.fromStackNumber) }
 }

@@ -1,34 +1,41 @@
 package pl.rstanski.adventofcode2022.day05.common
 
+import pl.rstanski.adventofcode2022.common.isNotBlank
+
 object CratesStacksBuilder {
 
     fun buildCratesStacks(drawing: Drawing): CratesStacks {
-        val cratesIndex = drawing.indexes
-            .mapIndexed { index, sign -> index to sign }
-            .filter { it.second != ' ' }
-            .map { it.first to it.second.digitToIntOrNull()!! }
-        val stacksNumber = cratesIndex.last().second
+        // 01234567890
+        // [Z]     [P]
+        //  1   2   3
+        val stackNumberToIndexList: List<StackNumberToIndex> = stackNumberToIndexMapping(drawing)
+        val stacksCount: Int = stackNumberToIndexList.size
 
-        val cratesLayers = drawing.crates.map { cratesLine ->
-            val crates = MutableList(stacksNumber) { ' ' }
-            cratesIndex.map { index ->
-                val create = cratesLine[index.first]
-                if (create != ' ') {
-                    crates[index.second - 1] = create
-                }
+        val cratesStacks = CratesStacks(stacksCount)
+
+        stackNumberToIndexList
+            .map { it.stackNumber to cratesToPutOnStack(it.index, drawing) }
+            .forEach { (stackNumber, crates) ->
+                cratesStacks.putCratesOnStack(stackNumber, crates)
             }
-
-            crates.toList()
-        }
-
-        val cratesStacks = CratesStacks(stacksNumber)
-
-        cratesLayers.reversed().forEach { cratesLayer ->
-            cratesLayer.forEachIndexed { index, crate ->
-                if (crate != ' ') cratesStacks.putCrateOnStack(index, crate)
-            }
-        }
 
         return cratesStacks
     }
+
+    private fun stackNumberToIndexMapping(drawing: Drawing): List<StackNumberToIndex> =
+        drawing.indexes
+            .mapIndexed { index, stackNumber -> stackNumber to index }
+            .filter { it.first.isNotBlank() }
+            .map { StackNumberToIndex(it.first.digitToInt(), it.second) }
+
+    private fun cratesToPutOnStack(cratesStackIndex: Int, drawing: Drawing): List<Char> =
+        drawing.crates
+            .map { it[cratesStackIndex] }
+            .filter { it.isNotBlank() }
+            .reversed()
 }
+
+private data class StackNumberToIndex(
+    val stackNumber: Int,
+    val index: Int
+)

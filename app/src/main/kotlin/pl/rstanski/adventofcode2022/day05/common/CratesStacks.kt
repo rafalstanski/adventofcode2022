@@ -8,19 +8,17 @@ class CratesStacks(stacksNumber: Int) {
         stacks = List(stacksNumber) { CratesStack() }
     }
 
-    fun putCrateOnStack(stackIndex: Int, crate: Char) {
-        stacks[stackIndex].putCrate(crate)
+    fun putCratesOnStack(stackNumber: Int, crates: List<Char>) {
+        crates.forEach { putCrateOnStack(stackNumber, it) }
     }
 
-    fun takeCrateFromStack(stackIndex: Int): Char {
-        return stacks[stackIndex].takeCrate()
+    private fun putCrateOnStack(stackNumber: Int, crate: Char) {
+        stacks[stackNumber - 1].putCrate(crate)
     }
 
-    fun topCrateFromAllStacks(): List<Char> {
-        return stacks.map { it.topCrate() }
-    }
+    fun takeCrateFromStack(stackNumber: Int): Char =
+        stacks[stackNumber - 1].takeCrate()
 
-    fun print() {
-        println(stacks.map { it.topCrate() }.joinToString(""))
-    }
+    fun topCrateFromAllStacks(): List<Char> =
+        stacks.map(CratesStack::topCrate)
 }
