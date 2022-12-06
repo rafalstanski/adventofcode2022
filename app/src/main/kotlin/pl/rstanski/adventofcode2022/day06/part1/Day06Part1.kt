@@ -16,6 +16,20 @@ fun main() {
 object Day06Part1Solution {
 
     fun solve(puzzle: Puzzle): Any {
-        TODO()
+        val subroutine: String = puzzle.lines.first()
+        val characters: List<String> = subroutine.map { it.toString() }
+
+        return Searcher.finder(characters) + 1
+    }
+}
+
+object Searcher {
+    fun finder(characters: List<String>): Int {
+        characters.withIndex().windowed(4, 1).map { indexedValues: List<IndexedValue<String>> ->
+            if (indexedValues.map { it.value }.toSet().size == 4) {
+                return indexedValues.last().index
+            }
+        }
+        throw IllegalArgumentException()
     }
 }

@@ -1,4 +1,4 @@
-package pl.rstanski.adventofcode2022.day06.part1
+package pl.rstanski.adventofcode2022.day06.part2
 
 import pl.rstanski.adventofcode2022.common.Puzzle
 import pl.rstanski.adventofcode2022.common.PuzzleLoader
@@ -16,6 +16,21 @@ fun main() {
 object Day06Part2Solution {
 
     fun solve(puzzle: Puzzle): Any {
-        TODO()
+        val subroutine: String = puzzle.lines.first()
+        val characters: List<String> = subroutine.map { it.toString() }
+
+        return Searcher.finder(characters) + 1
+    }
+}
+
+object Searcher {
+    fun finder(characters: List<String>): Int {
+        characters.withIndex().windowed(14, 1).map { indexedValues: List<IndexedValue<String>> ->
+            val distinctCharacters = indexedValues.map { it.value }.toSet()
+            if (distinctCharacters.size == 14) {
+                return indexedValues.last().index
+            }
+        }
+        throw IllegalArgumentException()
     }
 }
