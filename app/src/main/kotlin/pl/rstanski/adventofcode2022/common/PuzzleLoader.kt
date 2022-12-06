@@ -21,4 +21,10 @@ object PuzzleLoader {
         Thread.currentThread().contextClassLoader.getResource(fileName)
 }
 
-data class Puzzle(val lines: List<String>)
+data class Puzzle(val lines: List<String>) {
+    val singleLine: String
+        get() {
+            require(lines.size == 1) { "Expecting just one line but received: ${lines.size}" }
+            return lines.first()
+        }
+}
