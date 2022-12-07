@@ -1,5 +1,6 @@
 package pl.rstanski.adventofcode2022.day07.part1
 
+import java.math.BigInteger
 import pl.rstanski.adventofcode2022.common.Puzzle
 import pl.rstanski.adventofcode2022.common.PuzzleLoader
 
@@ -32,10 +33,9 @@ object Day07Part1Solution {
 
         instrs.drop(1).forEach { filesystem.apply(it) }
 
-        println(instrs)
-        filesystem.print()
+        println(filesystem.find())
 
-        TODO()
+        return filesystem.find()
     }
 
     private fun file(line: String): File {
@@ -61,7 +61,6 @@ object Day07Part1Solution {
 class Filesystem {
 
     private val structure = DirectoryNode("/", null, mutableListOf())
-    private var dirPrinting: DirectoryNode? = null
     private var currentDirectory: DirectoryNode = structure
 
     fun print() {
@@ -78,6 +77,26 @@ class Filesystem {
         }
     }
 
+    var total: BigInteger = BigInteger.ZERO
+
+    fun find(): BigInteger {
+        val list = mutableListOf<DirectoryNode>()
+        structure.find(list)
+
+        val free = BigInteger("70000000") - structure.size()
+        val need = BigInteger("30000000") - free
+
+        println("need: " + need)
+
+        val allDirectories = structure.getAllDirectories()
+        val find = allDirectories.sortedBy { it.size() }.first { it.size() >= need }
+
+//        val sum = list.sumOf { it.size() }
+//        println(sum)
+
+        return find.size()
+    }
+
     fun apply(sth: Sth) {
         println(sth.toString() + "\t\t: " + currentDirectory.toString())
         when (sth) {
@@ -85,29 +104,27 @@ class Filesystem {
                 when {
                     sth.dir == ".." -> currentDirectory = currentDirectory.parent!!
                     else -> {
-                        val dir = DirectoryNode(sth.dir, currentDirectory, mutableListOf())
-                        structure.children.add(dir)
-                        currentDirectory = dir
+                        if (currentDirectory.children.find { it.name == sth.dir } != null) {
+                            currentDirectory = currentDirectory.children.find { it.name == sth.dir } as DirectoryNode
+                        } else {
+                            val dir = DirectoryNode(sth.dir, currentDirectory, mutableListOf())
+                            structure.children.add(dir)
+                            currentDirectory = dir
+                        }
                     }
                 }
-                dirPrinting = currentDirectory
             }
 
             is LsCommand -> ignore()
             is DirectoryName -> {
-                val dddd = structure.children.find { it.name == sth.name } as DirectoryNode?
-                if (dddd == null) {
-                    val dir = DirectoryNode(sth.name, currentDirectory, mutableListOf())
-                    structure.children.add(dir)
-                    dirPrinting = dir
-                } else {
-                    dirPrinting = dddd
+                if (currentDirectory.children.find { it.name == sth.name } == null) {
+                    currentDirectory.children.add(DirectoryNode(sth.name, currentDirectory, mutableListOf()))
                 }
             }
 
             is File -> {
-                if (structure.children.find { it.name == sth.name } == null) {
-                    dirPrinting!!.children.add(FileNode(sth.name, dirPrinting, sth.size))
+                if (currentDirectory.children.find { it.name == sth.name } == null) {
+                    currentDirectory.children.add(FileNode(sth.name, currentDirectory, sth.size))
                 }
             }
         }
@@ -130,6 +147,33 @@ class DirectoryNode(
 ) : Node(name, parent, children) {
     override fun toString(): String {
         return "DirectoryNode(name='$name', children=$children)" // parent=${parent?.name},
+    }
+
+    fun size(): BigInteger {
+        return children.map { child ->
+            when(child) {
+                is FileNode -> child.size.toBigInteger()
+                is DirectoryNode -> child.size()
+            }
+        }.sumOf { it }
+    }
+
+    fun getAllDirectories(): List<DirectoryNode> {
+        val nodes = children.filterIsInstance<DirectoryNode>()
+        return listOf(this) + nodes.map { it.getAllDirectories() }.flatMap { it }
+    }
+
+    fun find(list:MutableList<DirectoryNode>) {
+        val limit = BigInteger("100000")
+        if (size() <= limit) {
+            list.add(this)
+        }
+
+        children.map { child ->
+            if(child is DirectoryNode) {
+                child.find(list)
+            }
+        }
     }
 }
 
