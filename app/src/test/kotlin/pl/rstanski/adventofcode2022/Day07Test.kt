@@ -1,5 +1,6 @@
 package pl.rstanski.adventofcode2022
 
+import java.math.BigInteger
 import kotlin.test.assertEquals
 import org.junit.Test
 import pl.rstanski.adventofcode2022.day07.part1.Day07Part1Solution
@@ -18,7 +19,7 @@ class Day07Test : BaseTest() {
         //when
         val solution = part1Solution.solve(puzzle)
         //then
-        assertEquals(expected = 0, actual = solution)
+        assertEquals(expected = BigInteger("95437"), actual = solution)
     }
 
     @Test
@@ -26,6 +27,6 @@ class Day07Test : BaseTest() {
         //when
         val solution = part2Solution.solve(puzzle)
         //then
-        assertEquals(expected = 0, actual = solution)
+        assertEquals(expected = BigInteger("24933642"), actual = solution)
     }
 }
