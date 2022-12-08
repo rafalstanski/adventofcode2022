@@ -1,8 +1,11 @@
 package pl.rstanski.adventofcode2022.day08.part1
 
-import kotlin.streams.toList
 import pl.rstanski.adventofcode2022.common.Puzzle
 import pl.rstanski.adventofcode2022.common.PuzzleLoader
+import pl.rstanski.adventofcode2022.day08.common.ForestParser
+import pl.rstanski.adventofcode2022.day08.common.Forrest
+import pl.rstanski.adventofcode2022.day08.common.Tree
+import pl.rstanski.adventofcode2022.day08.common.findHigherOrEqualsThen
 
 private const val PUZZLE_FILENAME = "day08.txt"
 
@@ -14,54 +17,26 @@ fun main() {
     println(result)
 }
 
-
 object Day08Part1Solution {
 
     fun solve(puzzle: Puzzle): Any {
-        val treeHeights = puzzle.lines
+        val forest = ForestParser.parseForest(puzzle)
+        val visibleTrees = VisibleFromOutSideTreeFinder.find(forest)
 
-        val grid = Grid(treeHeights.first().length, treeHeights.size)
-
-        treeHeights.forEachIndexed {indexY: Int, line: String ->
-            line.chars().toList().forEachIndexed { indexX: Int, height: Int ->
-                grid.putTrees(indexX, indexY, height - 48)
-            }
-        }
-
-
-        return grid.findVisible()
+        return visibleTrees.count()
     }
 }
 
-class Grid(private val xSize: Int, val ySize: Int) {
-    val trees: MutableList<MutableList<Int>> = MutableList(xSize) { MutableList(ySize) { 0 } }
+private object VisibleFromOutSideTreeFinder {
 
-    fun putTrees(x: Int, y: Int, height: Int) {
-        trees[x][y] = height
-    }
+    fun find(forest: Forrest): List<Tree> =
+        forest.allTrees()
+            .filter { tree ->
+                val isHiddenOnLeft = forest.goLeftFrom(tree).findHigherOrEqualsThen(tree) != null
+                val isHiddenOnRight = forest.goRightFrom(tree).findHigherOrEqualsThen(tree) != null
+                val isHiddenOnTop = forest.goTopFrom(tree).findHigherOrEqualsThen(tree) != null
+                val isHiddenOnBottom = forest.goBottomFrom(tree).findHigherOrEqualsThen(tree) != null
 
-    fun getTrees(x: Int, y: Int): Int {
-        return trees[x][y]
-    }
-
-    fun findVisible(): Int {
-        var count = edgeTreesCount()
-
-        (1..xSize - 2).forEach { x ->
-            (1..ySize - 2).forEach { y ->
-                val height = getTrees(x, y)
-
-                val onTheLeft = (0..x - 1).find { getTrees(it, y) >= height } != null
-                val onTheRight = (x + 1..xSize - 1).find { getTrees(it, y) >= height } != null
-                val fromBottom = (0..y - 1).find { getTrees(x, it) >= height } != null
-                val fromTop = (y + 1..ySize - 1).find { getTrees(x, it) >= height } != null
-
-                if (!(onTheLeft && onTheRight && fromTop && fromBottom)) count++
-            }
-        }
-
-        return count
-    }
-
-    private fun edgeTreesCount() = xSize * 2 + ySize * 2 - 4
+                !(isHiddenOnLeft && isHiddenOnRight && isHiddenOnTop && isHiddenOnBottom)
+            }.toList()
 }
