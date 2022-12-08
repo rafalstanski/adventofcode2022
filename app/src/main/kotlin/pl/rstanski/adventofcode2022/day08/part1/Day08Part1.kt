@@ -56,8 +56,6 @@ class Grid(private val xSize: Int, val ySize: Int) {
                 val fromBottom = (0..y - 1).find { getTrees(x, it) >= height } != null
                 val fromTop = (y + 1..ySize - 1).find { getTrees(x, it) >= height } != null
 
-//                println("x: $x, y: $y, h: $height -> left: $onTheLeft, right: $onTheRight, ")
-
                 if (!(onTheLeft && onTheRight && fromTop && fromBottom)) count++
             }
         }
