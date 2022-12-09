@@ -12,6 +12,7 @@ class Day09Test : BaseTest() {
 
     //given
     private val puzzle = puzzleFrom("day09sample.txt")
+    private val puzzleSpecificForPart2 = puzzleFrom("day09Part2sample.txt")
 
     @Test
     fun shouldFindCorrectSolutionOfPart1ForSamplePuzzle() {
@@ -27,5 +28,13 @@ class Day09Test : BaseTest() {
         val solution = part2Solution.solve(puzzle)
         //then
         assertEquals(expected = 1, actual = solution)
+    }
+
+    @Test
+    fun shouldFindCorrectSolutionOfPart2ForSamplePuzzleSpecificForPart2() {
+        //when
+        val solution = part2Solution.solve(puzzleSpecificForPart2)
+        //then
+        assertEquals(expected = 36, actual = solution)
     }
 }
