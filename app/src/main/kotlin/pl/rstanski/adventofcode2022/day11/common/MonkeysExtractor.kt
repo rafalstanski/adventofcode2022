@@ -2,30 +2,13 @@ package pl.rstanski.adventofcode2022.day11.common
 
 import java.math.BigInteger
 import pl.rstanski.adventofcode2022.common.Puzzle
+import pl.rstanski.adventofcode2022.common.splitByEmptyLine
 
 object MonkeysExtractor {
 
     fun extractMonkeys(puzzle: Puzzle): List<Monkey> {
-        val linesIterator = puzzle.lines.iterator()
-
-        val currentGroup = mutableListOf<String>()
-        val monkeys = mutableListOf<Monkey>()
-
-        while (linesIterator.hasNext()) {
-            val line = linesIterator.next()
-
-            if (line.isNotListSeparator()) {
-                currentGroup.add(line)
-            } else {
-                val monkey = convertToMonkey(currentGroup)
-                monkeys.add(monkey)
-                currentGroup.clear()
-            }
-        }
-        val monkey = convertToMonkey(currentGroup)
-        monkeys.add(monkey)
-
-        return monkeys
+        val groups = puzzle.lines.splitByEmptyLine()
+        return groups.map(::convertToMonkey)
     }
 
     private fun convertToMonkey(lines: List<String>): Monkey {
@@ -61,6 +44,3 @@ object MonkeysExtractor {
         return Monkey(index, items.toMutableList(), operation, test)
     }
 }
-
-private fun String.isNotListSeparator(): Boolean =
-    this.isNotBlank()
