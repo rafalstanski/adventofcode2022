@@ -18,49 +18,45 @@ object Day11Part2Solution {
 
     fun solve(puzzle: Puzzle): Any {
         val monkeys = MonkeysExtractor.extract(puzzle)
+        val monkeysByIndex = monkeys.associateBy(Monkey::index)
 
-        val monkeysMap = monkeys.associateBy { it.index }
+        val reductor = monkeys.map { it.test.divisibleBy }.reduce { acc, bigInteger -> acc * bigInteger }
 
-        (1..20).forEach {
+
+
+        repeat(10000) {
             monkeys.forEach { monkey ->
-                monkey.takeAll().forEach { item ->
+                monkey.takeAllItems().forEach { item ->
                     var newItem = monkey.operation.calculate(item)
-//                    newItem = newItem / 3
+                    newItem = Item(newItem.worryLevel.mod(reductor))
                     val monkeyToThrow = monkey.test.resultOfTesting(newItem)
 
-                    monkeysMap[monkeyToThrow]!!.catch(newItem)
+                    monkeysByIndex[monkeyToThrow]!!.catch(newItem)
                 }
             }
 
-//            if (it in listOf(1, 20, 1000)) {
-            println("Round: $it")
-            monkeys.forEach {
-                println(it)
-                println(it.items.count().toString() + ": " + it.inspectsCount)
+            if ((it + 1) in listOf(1, 20, 1000)) {
+                println("Round: ${it+1}")
+                monkeys.forEach { monkey ->
+                    println("monkey ${monkey.index}: ${monkey.inspectsCount}")
+                }
             }
-//                monkeys.forEach { monkey ->
-//                    println(monkey.inspectsCount.toString() + " : " + monkey.items.count())
-//                }
-//            }
         }
 
+        val twoMostInspected = monkeys.sortedByDescending(Monkey::inspectsCount)
+            .take(2)
 
-        val mmm = monkeys.sortedByDescending { it.inspectsCount }.take(2)
-
-
-        println(mmm[0].inspectsCount * mmm[1].inspectsCount)
-
-        return mmm[0].inspectsCount * mmm[1].inspectsCount
+        return twoMostInspected[0].inspectsCount * twoMostInspected[1].inspectsCount
     }
 }
 
-data class Item(val worryLevel: BigInteger, val dividableBy: Set<BigInteger>)
+data class Item(val worryLevel: BigInteger)
 
 data class Monkey(val index: Int, val items: MutableList<Item>, val operation: Operation, val test: Test) {
 
     var inspectsCount = 0L
 
-    fun takeAll(): List<Item> {
+    fun takeAllItems(): List<Item> {
         val returnItems = items.toList()
         inspectsCount += returnItems.size
         items.clear()
@@ -104,12 +100,7 @@ object MonkeysExtractor {
 
         // Starting items: 79, 98
         val worryLevels = lines[1].drop("  Starting items: ".length).split(", ").map(String::toBigInteger)
-        val items = worryLevels.map { worryLevel ->
-            val devidable = listOf(2, 3, 5, 7, 11, 13, 17, 19).map { it.toBigInteger() }
-                .filter { worryLevel.mod(it) == BigInteger.ZERO }
-                .toSet()
-            Item(worryLevel, dividableBy = devidable)
-        }
+        val items = worryLevels.map(::Item)
 
 
         // Operation: new = old * 19
@@ -119,22 +110,17 @@ object MonkeysExtractor {
             else -> parts[1].toBigInteger()
         }
 
-        val devidable = if (operationValue != BigInteger("-1")) {
-            listOf(2, 3, 5, 7, 11, 13, 17, 19).map { it.toBigInteger() }
-                .filter { operationValue.mod(it) == BigInteger.ZERO }
-                .toSet()
-        } else {
-            emptySet()
-        }
         val operation = when (parts[0]) {
             "+" -> Add(operationValue)
-            "*" -> Multiply(operationValue, devidable)
+            "*" -> Multiply(operationValue)
             else -> throw IllegalArgumentException("unknown operation:" + parts[0])
         }
 
         //  Test: divisible by 23
         val divisibleBy = lines[3].drop("  Test: divisible by ".length).toBigInteger()
+        //    If true: throw to monkey 2
         val trueTest = lines[4].drop("    If true: throw to monkey ".length).toInt()
+        //   If false: throw to monkey 0
         val falseTest = lines[5].drop("    If false: throw to monkey ".length).toInt()
         val test = Test(divisibleBy, trueTest, falseTest)
 
@@ -145,7 +131,7 @@ object MonkeysExtractor {
 data class Test(val divisibleBy: BigInteger, val trueTest: Int, val falseTest: Int) {
 
     fun resultOfTesting(item: Item): Int {
-        return when (item.dividableBy.contains(divisibleBy)) {
+        return when (item.worryLevel.mod(divisibleBy) == BigInteger.ZERO) {
             true -> trueTest
             false -> falseTest
         }
@@ -160,26 +146,20 @@ sealed interface Operation {
 data class Add(val value: BigInteger) : Operation {
     override fun calculate(item: Item): Item {
         return when (value) {
-            BigInteger("-1") -> Item(item.worryLevel + item.worryLevel, item.dividableBy + BigInteger.TWO)
-            else -> {
-                val newWorryLevel = item.worryLevel + value
-                val dividable = listOf(2, 3, 5, 7, 11, 13, 17, 19).map { it.toBigInteger() }
-                    .filter { newWorryLevel.mod(it) == BigInteger.ZERO }
-                    .toSet()
-                Item(newWorryLevel, dividable)
-            }
+            BigInteger("-1") -> Item(item.worryLevel + item.worryLevel)
+            else -> Item(item.worryLevel + value)
         }
     }
-
 }
 
-data class Multiply(val value: BigInteger, val dividableBy: Set<BigInteger>) : Operation {
+// (a + b) mod x = ((a mod x) + (b mod x)) mod x
+// (a * b) mod x = ((a mod x) * (b mod x)) mod x
+
+data class Multiply(val value: BigInteger) : Operation {
     override fun calculate(item: Item): Item {
         return when (value) {
-            BigInteger("-1") -> item.copy(worryLevel = item.worryLevel * item.worryLevel)
-            else -> {
-                Item(item.worryLevel * value, item.dividableBy + dividableBy)
-            }
+            BigInteger("-1") -> Item(item.worryLevel * item.worryLevel)
+            else -> Item(item.worryLevel * value)
         }
     }
 }
