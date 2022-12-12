@@ -1,6 +1,8 @@
-package pl.rstanski.adventofcode2022.day12.part1
+package pl.rstanski.adventofcode2022.day12.common
 
 import java.util.LinkedList
+
+// Source: https://github.com/casidiablo/dijkstra-kotlin
 
 data class Edge<T, E : Number>(val from: T, val to: T, val value: E)
 
