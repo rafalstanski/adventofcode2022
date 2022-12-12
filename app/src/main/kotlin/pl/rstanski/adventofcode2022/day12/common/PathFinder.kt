@@ -11,6 +11,7 @@ data class Node(
 
 class PathFinder(private val grid: Grid<Int>) {
 
+    //BFS
     fun findShortestPathLength(from: Point, to: Point): Int {
         val visited = mutableSetOf<Point>()
         val nodesToCheck = LinkedList<Node>()
@@ -27,19 +28,18 @@ class PathFinder(private val grid: Grid<Int>) {
             if (currentPoint in visited) continue
             visited.add(currentPoint)
 
-            val left = grid.getPointOrNull(currentPoint.left())
-            val right = grid.getPointOrNull(currentPoint.right())
-            val down = grid.getPointOrNull(currentPoint.down())
-            val up = grid.getPointOrNull(currentPoint.up())
-
             val currentElevation = grid.getPoint(currentPoint)
-
-            if (left != null && currentElevation + 1 >= left) nodesToCheck.add(Node(currentPoint.left(), depth + 1))
-            if (right != null && currentElevation + 1 >= right) nodesToCheck.add(Node(currentPoint.right(), depth + 1))
-            if (down != null && currentElevation + 1 >= down) nodesToCheck.add(Node(currentPoint.down(), depth + 1))
-            if (up != null && currentElevation + 1 >= up) nodesToCheck.add(Node(currentPoint.up(), depth + 1))
+            pointsAdjacentTo(currentPoint).forEach { (adjacentPoint, elevation) ->
+                if (elevation != null && currentElevation + 1 >= elevation)
+                    nodesToCheck.add(Node(adjacentPoint, depth + 1))
+            }
         }
 
         throw IllegalStateException("Unable to find path from $from to $to")
     }
+
+    private fun pointsAdjacentTo(currentPoint: Point): List<Pair<Point, Int?>> =
+        listOf(currentPoint.left(), currentPoint.right(), currentPoint.up(), currentPoint.down()).map {
+            it to grid.getPointOrNull(it)
+        }
 }
