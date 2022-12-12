@@ -44,31 +44,17 @@ object Day12Part1Solution {
             (0 until grid.ySize).forEach { y ->
                 val point = Point(x, y)
                 val pointValue = grid.getPoint(point)
-                val toPointRight = grid.getPointOrNullIfOutOfGrid(point.right())
-                val toPointUp = grid.getPointOrNullIfOutOfGrid(point.up())
+                val toPointRight = grid.getPointOrNull(point.right())
+                val toPointUp = grid.getPointOrNull(point.up())
 
                 if (toPointRight != null) {
-                    when {
-                        pointValue == toPointRight -> {
-                            graph.addArc(point to point.right())
-                            graph.addArc(point.right() to point)
-                        }
-
-                        pointValue + 1 == toPointRight -> graph.addArc(point to point.right())
-                        pointValue == toPointRight + 1 -> graph.addArc(point.right() to point)
-                    }
+                    if (pointValue + 1 >= toPointRight) graph.addArc(point to point.right())
+                    if (toPointRight + 1 >= pointValue) graph.addArc(point.right() to point)
                 }
 
                 if (toPointUp != null) {
-                    when {
-                        pointValue == toPointUp -> {
-                            graph.addArc(point to point.up())
-                            graph.addArc(point.up() to point)
-                        }
-
-                        pointValue + 1 == toPointUp -> graph.addArc(point to point.up())
-                        pointValue == toPointUp + 1 -> graph.addArc(point.up() to point)
-                    }
+                    if (pointValue + 1 >= toPointUp) graph.addArc(point to point.up())
+                    if (toPointUp + 1 >= pointValue) graph.addArc(point.up() to point)
                 }
             }
         }

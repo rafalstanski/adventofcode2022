@@ -20,13 +20,13 @@ class Grid<T>(
         getPoint(point.x, point.y)
 
     fun getPoint(x: Int, y: Int): T =
-        getPointOrNullIfOutOfGrid(x, y)
+        getPointOrNull(x, y)
             ?: throw PointOutOfGridException(Point(x, y))
 
-    fun getPointOrNullIfOutOfGrid(point: Point): T? =
-        getPointOrNullIfOutOfGrid(point.x, point.y)
+    fun getPointOrNull(point: Point): T? =
+        getPointOrNull(point.x, point.y)
 
-    fun getPointOrNullIfOutOfGrid(x: Int, y: Int): T? =
+    fun getPointOrNull(x: Int, y: Int): T? =
         if (x < 0 || x >= xSize || y < 0 || y >= ySize)
             null
         else

@@ -27,10 +27,10 @@ class PathFinder(private val grid: Grid<Int>) {
             if (currentPoint in visited) continue
             visited.add(currentPoint)
 
-            val left = grid.getPointOrNullIfOutOfGrid(currentPoint.left())
-            val right = grid.getPointOrNullIfOutOfGrid(currentPoint.right())
-            val down = grid.getPointOrNullIfOutOfGrid(currentPoint.down())
-            val up = grid.getPointOrNullIfOutOfGrid(currentPoint.up())
+            val left = grid.getPointOrNull(currentPoint.left())
+            val right = grid.getPointOrNull(currentPoint.right())
+            val down = grid.getPointOrNull(currentPoint.down())
+            val up = grid.getPointOrNull(currentPoint.up())
 
             val currentElevation = grid.getPoint(currentPoint)
 
