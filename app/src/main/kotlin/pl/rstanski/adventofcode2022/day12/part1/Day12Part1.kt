@@ -1,5 +1,8 @@
 package pl.rstanski.adventofcode2022.day12.part1
 
+import java.util.LinkedList
+import pl.rstanski.adventofcode2022.common.Grid
+import pl.rstanski.adventofcode2022.common.Point
 import pl.rstanski.adventofcode2022.common.Puzzle
 import pl.rstanski.adventofcode2022.common.PuzzleLoader
 
@@ -13,65 +16,116 @@ fun main() {
     println(result)
 }
 
+
 object Day12Part1Solution {
 
     fun solve(puzzle: Puzzle): Any {
-        val pointsRows = puzzle.lines
+        val grid = GridParser.parseGrid(puzzle)
+        val start = PointFinder.findPoint(puzzle, 'S')
+        val bestSignal = PointFinder.findPoint(puzzle, 'E')
 
-        val grid = Grid(pointsRows.first().length, pointsRows.size)
-        var start: Point = Point(0, 0)
-        var bestSignal: Point = Point(0, 0)
-
-        pointsRows.forEachIndexed { indexY: Int, pointsRow: String ->
-            pointsRow.toList().forEachIndexed { indexX: Int, height: Char ->
-                var elevation: Char = height
-
-                if (height == 'S') {
-                    //start
-                    start = Point(indexX, grid.ySize - 1 - indexY)
-                    elevation = 'a'
-
-                    println("Start point: $start - $elevation")
-                }
-
-                if (height == 'E') {
-                    //best signal
-                    bestSignal = Point(indexX, grid.ySize - 1 - indexY)
-                    grid.bestSignal = bestSignal
-                    elevation = 'z'
-
-                    println("best signal: $bestSignal - $elevation")
-                }
-
-                grid.putPoint(
-                    x = indexX,
-                    y = grid.ySize - 1 - indexY,
-                    height = elevation.code
-                )
-            }
-        }
-
-        grid.buildGraph()
-
-        val (path, value) = shortestPath(grid.graph, start, bestSignal)
-        println("path = $path, value = $value")
-
-        grid.printPoint(path.toSet())
-
-        grid.findPathFrom(start, mutableSetOf())
-        println(grid.paths)
-
-        grid.printPoint(grid.pathsDetails[31]!!)
-
-        return value.toInt()
+        return PathFinder(grid)
+            .findShortestPath(start, bestSignal)
     }
 
 }
 
+object PointFinder {
 
-data class Point(val x: Int, val y: Int)
+    fun findPoint(puzzle: Puzzle, point: Char): Point {
+        puzzle.lines.forEachIndexed { indexY: Int, row: String ->
+            row.toList().forEachIndexed { indexX: Int, height: Char ->
+                if (height == point) {
+                    return Point(
+                        x = indexX,
+                        y = puzzle.lines.size - 1 - indexY,
+                    )
+                }
+            }
+        }
+        throw IllegalStateException("Unable to find point $point")
+    }
+}
 
-class Grid(val xSize: Int, val ySize: Int) {
+
+object GridParser {
+
+    fun parseGrid(puzzle: Puzzle): Grid<Int> {
+        val rows: List<String> = puzzle.lines
+
+        val grid = prepareEmptyGridOfSizeBasedOn(rows)
+        populateGrid(grid, rows)
+
+        return grid
+
+    }
+
+    private fun prepareEmptyGridOfSizeBasedOn(treesRows: List<String>): Grid<Int> =
+        Grid(xSize = treesRows.first().length, ySize = treesRows.size) { 0 }
+
+    private fun populateGrid(grid: Grid<Int>, rows: List<String>) {
+        rows.forEachIndexed { indexY: Int, row: String ->
+            row.toList().forEachIndexed { indexX: Int, height: Char ->
+                val elevation: Int = calculateElevation(height)
+
+                grid.putPoint(
+                    x = indexX,
+                    y = grid.ySize - 1 - indexY,
+                    value = elevation
+                )
+            }
+        }
+    }
+
+    private fun calculateElevation(height: Char) = when (height) {
+        'S' -> 'a'
+        'E' -> 'z'
+        else -> height
+    }.code
+}
+
+data class Node(
+    val point: Point,
+    val depth: Int
+)
+
+class PathFinder(private val grid: Grid<Int>) {
+
+    fun findShortestPath(from: Point, to: Point): Int {
+        val visited = mutableSetOf<Point>()
+        val nodesToCheck = LinkedList<Node>()
+
+        nodesToCheck.push(Node(from, 0))
+
+        while (nodesToCheck.isNotEmpty()) {
+            val nodeToCheck = nodesToCheck.poll()
+            val currentPoint = nodeToCheck.point
+            val depth = nodeToCheck.depth
+
+            if (currentPoint == to) return depth
+
+            if (currentPoint in visited) continue
+            visited.add(currentPoint)
+
+            val left = grid.getPointOrNullIfOutOfGrid(currentPoint.left())
+            val right = grid.getPointOrNullIfOutOfGrid(currentPoint.right())
+            val down = grid.getPointOrNullIfOutOfGrid(currentPoint.down())
+            val up = grid.getPointOrNullIfOutOfGrid(currentPoint.up())
+
+            val currentElevation = grid.getPoint(currentPoint)
+
+            if (left != null && currentElevation + 1 >= left) nodesToCheck.add(Node(currentPoint.left(), depth + 1))
+            if (right != null && currentElevation + 1 >= right) nodesToCheck.add(Node(currentPoint.right(), depth + 1))
+            if (down != null && currentElevation + 1 >= down) nodesToCheck.add(Node(currentPoint.down(), depth + 1))
+            if (up != null && currentElevation + 1 >= up) nodesToCheck.add(Node(currentPoint.up(), depth + 1))
+        }
+
+        throw IllegalStateException("Unable to find path from $from to $to")
+    }
+}
+
+
+class Grid2(val xSize: Int, val ySize: Int) {
 
     private val points = MutableList(xSize) { MutableList(ySize) { 0 } }
     var bestSignal: Point = Point(0, 0)
@@ -132,11 +186,11 @@ class Grid(val xSize: Int, val ySize: Int) {
         }
     }
 
-    fun findPathFrom(start: Point, visitedPoints: Set<Point>) {
+    fun findPathFrom(start: Point, visitedPoints: MutableSet<Point>, depth: Int) {
         if (start == bestSignal) {
             println("found")
-            paths += visitedPoints.size
-            pathsDetails[visitedPoints.size] = visitedPoints
+            paths += depth
+            pathsDetails[depth] = visitedPoints
             return
         }
 
@@ -152,10 +206,12 @@ class Grid(val xSize: Int, val ySize: Int) {
 
         val current = getPoint(start.x, start.y)!!
 
-        if (left != null && current + 1 >= left) findPathFrom(Point(start.x - 1, start.y), visitedPoints + start)
-        if (right != null && current + 1 >= right) findPathFrom(Point(start.x + 1, start.y), visitedPoints + start)
-        if (down != null && current + 1 >= down) findPathFrom(Point(start.x, start.y - 1), visitedPoints + start)
-        if (up != null && current + 1 >= up) findPathFrom(Point(start.x, start.y + 1), visitedPoints + start)
+        visitedPoints += start
+
+        if (left != null && current + 1 >= left) findPathFrom(Point(start.x - 1, start.y), visitedPoints, depth + 1)
+        if (right != null && current + 1 >= right) findPathFrom(Point(start.x + 1, start.y), visitedPoints, depth + 1)
+        if (down != null && current + 1 >= down) findPathFrom(Point(start.x, start.y - 1), visitedPoints, depth + 1)
+        if (up != null && current + 1 >= up) findPathFrom(Point(start.x, start.y + 1), visitedPoints, depth + 1)
     }
 
     fun getPoint(point: Point): Int? {
