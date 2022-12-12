@@ -24,7 +24,7 @@ object Day12Part1Solution {
 
         pointsRows.forEachIndexed { indexY: Int, pointsRow: String ->
             pointsRow.toList().forEachIndexed { indexX: Int, height: Char ->
-                var elevation:Char = height
+                var elevation: Char = height
 
                 if (height == 'S') {
                     //start
@@ -51,11 +51,19 @@ object Day12Part1Solution {
             }
         }
 
-        grid.findPathFrom(start, mutableSetOf())
+        grid.buildGraph()
 
+        val (path, value) = shortestPath(grid.graph, start, bestSignal)
+        println("path = $path, value = $value")
+
+        grid.printPoint(path.toSet())
+
+        grid.findPathFrom(start, mutableSetOf())
         println(grid.paths)
 
-        return grid.paths.minOf { it }
+        grid.printPoint(grid.pathsDetails[31]!!)
+
+        return value.toInt()
     }
 
 }
@@ -68,15 +76,68 @@ class Grid(val xSize: Int, val ySize: Int) {
     private val points = MutableList(xSize) { MutableList(ySize) { 0 } }
     var bestSignal: Point = Point(0, 0)
     val paths: MutableSet<Int> = mutableSetOf()
+    val pathsDetails: MutableMap<Int, Set<Point>> = mutableMapOf()
+    val graph = GraphImpl<Point, Int>(directed = true, defaultCost = 1)
 
     fun putPoint(x: Int, y: Int, height: Int) {
         points[x][y] = height
+    }
+
+    fun printPoint(path: Set<Point>) {
+        (0 until ySize).forEach { y ->
+            (0 until xSize).forEach { x ->
+                val point = Point(x, ySize - 1 - y)
+                if (point in path) {
+                    print("#")
+                } else {
+                    print(".")
+                }
+            }
+            println()
+        }
+
+
+    }
+
+    fun buildGraph() {
+        (0 until xSize).forEach { x ->
+            (0 until ySize).forEach { y ->
+                val fromPoint = getPoint(x, y)!!
+                val toPointRight = getPoint(x + 1, y)
+                val toPointUp = getPoint(x, y + 1)
+                if (toPointRight != null) {
+                    when {
+                        fromPoint == toPointRight -> {
+                            graph.addArc(Point(x, y) to Point(x + 1, y), 1)
+                            graph.addArc(Point(x + 1, y) to Point(x, y), 1)
+                        }
+
+                        fromPoint + 1 == toPointRight -> graph.addArc(Point(x, y) to Point(x + 1, y), 1)
+                        fromPoint == toPointRight + 1 -> graph.addArc(Point(x + 1, y) to Point(x, y), 1)
+                    }
+                }
+
+                if (toPointUp != null) {
+                    when {
+                        fromPoint == toPointUp -> {
+                            graph.addArc(Point(x, y) to Point(x, y + 1), 1)
+                            graph.addArc(Point(x, y + 1) to Point(x, y), 1)
+                        }
+
+                        fromPoint + 1 == toPointUp -> graph.addArc(Point(x, y) to Point(x, y + 1), 1)
+                        fromPoint == toPointUp + 1 -> graph.addArc(Point(x, y + 1) to Point(x, y), 1)
+                    }
+                }
+            }
+        }
     }
 
     fun findPathFrom(start: Point, visitedPoints: Set<Point>) {
         if (start == bestSignal) {
             println("found")
             paths += visitedPoints.size
+            pathsDetails[visitedPoints.size] = visitedPoints
+            return
         }
 
         if (start in visitedPoints) {
