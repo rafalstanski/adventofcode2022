@@ -5,6 +5,9 @@ import java.math.BigInteger
 fun List<String>.toBigIntegers(): List<BigInteger> =
     this.map(String::toBigInteger)
 
+fun List<String>.toLongs(): List<Long> =
+    this.map(String::toLong)
+
 fun List<String>.toInts(): List<Int> =
     this.map(String::toInt)
 
