@@ -2,7 +2,6 @@ package pl.rstanski.adventofcode2022.day13.part2
 
 import pl.rstanski.adventofcode2022.common.Puzzle
 import pl.rstanski.adventofcode2022.common.PuzzleLoader
-import pl.rstanski.adventofcode2022.common.SplitLines
 
 private const val PUZZLE_FILENAME = "day13.txt"
 
@@ -18,15 +17,25 @@ fun main() {
 object Day13Part2Solution {
 
     fun solve(puzzle: Puzzle): Any {
-        val groups: List<List<String>> = SplitLines.split(puzzle.lines)
-
-        return groups.mapIndexed { index, group -> parsePackets(index + 1, group) }
-            .filter { it.second == ORDER.RIGHT_ORDER }
-            .map {
-                println(it)
-                it
+        val list = puzzle.lines.filter { it.isNotBlank() }.toMutableList()
+        list.add("[[2]]")
+        list.add("[[6]]")
+        val sortedWith = list.map { parseLine(it) }.sortedWith { a, b ->
+            when (compare(a, b)) {
+                ORDER.RIGHT_ORDER -> -1
+                ORDER.NONE -> 0
+                ORDER.NOT_RIGHT_ORDER -> 1
             }
-            .sumOf { it.first }
+        }
+        val list1 = sortedWith.map { it.toString().replace(" ", "") }
+
+        val index1 = list1.indexOf("[[2]]") + 1
+        println(index1)
+        val index2 = list1.indexOf("[[6]]") + 1
+        println(index2)
+
+
+        return index1 * index2
     }
 
     private fun parsePackets(index: Int, group: List<String>): Pair<Int, ORDER> {
@@ -34,8 +43,8 @@ object Day13Part2Solution {
         val right = parseLine(group[1])
         val afterParseLeft = left.toString().replace(" ", "")
         val afterParseRight = right.toString().replace(" ", "")
-        require(afterParseLeft == group[0]) { "There is a different original = ${group[0]}, parsed = $afterParseLeft"}
-        require(afterParseRight == group[1]) { "There is a different original = ${group[1]}, parsed = $afterParseRight"}
+        require(afterParseLeft == group[0]) { "There is a different original = ${group[0]}, parsed = $afterParseLeft" }
+        require(afterParseRight == group[1]) { "There is a different original = ${group[1]}, parsed = $afterParseRight" }
 
         println(index)
         println(compare(left, right))
