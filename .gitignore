@@ -12,6 +12,7 @@
 *.iml
 *.ipr
 *.iws
+/app/out/
 
 # Package Files #
 *.jar
