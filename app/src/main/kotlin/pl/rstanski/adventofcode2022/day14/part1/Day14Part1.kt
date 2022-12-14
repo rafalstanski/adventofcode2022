@@ -23,8 +23,8 @@ object Day14Part1Solution {
     fun solve(puzzle: Puzzle): Any {
         val rockPaths = puzzle.lines.map { parseRockPath(it) }
 
-        val maxX = rockPaths.maxOf { it.coordinatesList.maxOf { it.x } } + 10
-        val maxY = rockPaths.maxOf { it.coordinatesList.maxOf { it.y } } + 10
+        val maxX = rockPaths.maxOf { it.coordinatesList.maxOf { it.x } } + 1
+        val maxY = rockPaths.maxOf { it.coordinatesList.maxOf { it.y } } + 1
 
         val grid = Grid(maxX, maxY) { 0 }
 
@@ -42,7 +42,6 @@ object Day14Part1Solution {
             try {
                 tryToPutSand(grid, sand)
             } catch ( e : PointOutOfGridException) {
-                println(sandCount)
                 return sandCount - 1
             }
 //            println("----")
@@ -60,6 +59,10 @@ object Day14Part1Solution {
         val tile = grid.getPoint(sand.up())
         grid.putPoint(sand, -1)
 //        println("try: $sand, title: $tile")
+
+        if (sand.up().y == 0) {
+            throw PointOutOfGridException(sand.up())
+        }
 
         if (tile <= 0) {
             tryToPutSand(grid, sand.up())
