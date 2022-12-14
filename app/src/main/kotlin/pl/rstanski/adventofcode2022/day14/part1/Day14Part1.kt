@@ -60,17 +60,11 @@ object Day14Part1Solution {
         grid.putPoint(sand, -1)
 //        println("try: $sand, title: $tile")
 
-        if (sand.up().y == 0) {
-            throw PointOutOfGridException(sand.up())
-        }
-
         if (tile <= 0) {
             tryToPutSand(grid, sand.up())
         } else {
             val leftDown = grid.getPoint(sand.up().left())
             val rightDown = grid.getPoint(sand.up().right())
-
-//            println("left: $leftDown, right: $rightDown")
 
             if (leftDown <= 0) {
                 tryToPutSand(grid, sand.up().left())
