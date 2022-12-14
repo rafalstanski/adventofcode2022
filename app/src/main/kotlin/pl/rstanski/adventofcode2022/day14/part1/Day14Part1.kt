@@ -2,6 +2,7 @@ package pl.rstanski.adventofcode2022.day14.part1
 
 import pl.rstanski.adventofcode2022.common.Grid
 import pl.rstanski.adventofcode2022.common.Point
+import pl.rstanski.adventofcode2022.common.PointOutOfGridException
 import pl.rstanski.adventofcode2022.common.Puzzle
 import pl.rstanski.adventofcode2022.common.PuzzleLoader
 import pl.rstanski.adventofcode2022.common.toInts
@@ -22,8 +23,8 @@ object Day14Part1Solution {
     fun solve(puzzle: Puzzle): Any {
         val rockPaths = puzzle.lines.map { parseRockPath(it) }
 
-        val maxX = rockPaths.maxOf { it.coordinatesList.maxOf { it.x } }
-        val maxY = rockPaths.maxOf { it.coordinatesList.maxOf { it.y } }
+        val maxX = rockPaths.maxOf { it.coordinatesList.maxOf { it.x } } + 10
+        val maxY = rockPaths.maxOf { it.coordinatesList.maxOf { it.y } } + 10
 
         val grid = Grid(maxX, maxY) { 0 }
 
@@ -31,7 +32,23 @@ object Day14Part1Solution {
 
         printGrid(grid)
 
-//        while (true) {
+        val sand = Point(500, 0)
+
+
+        var sandCount = 0
+
+        while (true) {
+            sandCount += 1
+            try {
+                tryToPutSand(grid, sand)
+            } catch ( e : PointOutOfGridException) {
+                println(sandCount)
+                return sandCount - 1
+            }
+//            println("----")
+//            printGrid(grid)
+        }
+
         //one unit at a time
         //produced until the previous unit of sand comes to rest
 
@@ -39,14 +56,41 @@ object Day14Part1Solution {
         TODO()
     }
 
+    private fun tryToPutSand(grid: Grid<Int>, sand: Point) {
+        val tile = grid.getPoint(sand.up())
+        grid.putPoint(sand, -1)
+//        println("try: $sand, title: $tile")
+
+        if (tile <= 0) {
+            tryToPutSand(grid, sand.up())
+        } else {
+            val leftDown = grid.getPoint(sand.up().left())
+            val rightDown = grid.getPoint(sand.up().right())
+
+//            println("left: $leftDown, right: $rightDown")
+
+            if (leftDown <= 0) {
+                tryToPutSand(grid, sand.up().left())
+            } else if (rightDown <= 0) {
+                tryToPutSand(grid, sand.up().right())
+            } else {
+                grid.putPoint(sand, 2)
+            }
+        }
+    }
+
     private fun printGrid(grid: Grid<Int>) {
-        (494..504).forEach { x ->
-            (494..504).forEach { y ->
-                when (grid.getPoint(x, y)) {
-                    1 -> println("#")
-                    else -> println(".")
+        (0..9).forEach { y ->
+            print("$y")
+            (493..504).forEach { x ->
+                when (grid.getPointOrNull(x, y)) {
+                    -1 -> print("x")
+                    1 -> print("#")
+                    2 -> print("o")
+                    else -> print(".")
                 }
             }
+            println()
         }
     }
 
@@ -56,17 +100,31 @@ object Day14Part1Solution {
                 require(rockLine.start.x == rockLine.stop.x || rockLine.start.y == rockLine.stop.y)
 
                 when {
-                    rockLine.start.x == rockLine.stop.x -> (rockLine.start.y..rockLine.stop.y).forEach { y ->
-                        grid.putPoint(rockLine.start.x, y, 1)
-                    }
-
-                    rockLine.start.y == rockLine.stop.y -> (rockLine.start.x..rockLine.stop.x).forEach { x ->
-                        grid.putPoint(x, rockLine.start.y, 1)
-                    }
+                    rockLine.start.x == rockLine.stop.x -> populateVertical(grid, rockLine)
+                    rockLine.start.y == rockLine.stop.y -> populateHorizontal(grid, rockLine)
                 }
             }
         }
     }
+
+    private fun populateVertical(grid: Grid<Int>, rockLine: RockLine) {
+        val startY = Math.min(rockLine.start.y, rockLine.stop.y)
+        val stopY = Math.max(rockLine.start.y, rockLine.stop.y)
+
+        (startY..stopY).forEach { y ->
+            grid.putPoint(rockLine.start.x, y, 1)
+        }
+    }
+
+    private fun populateHorizontal(grid: Grid<Int>, rockLine: RockLine) {
+        val startX = Math.min(rockLine.start.x, rockLine.stop.x)
+        val stopX = Math.max(rockLine.start.x, rockLine.stop.x)
+
+        (startX..stopX).forEach { x ->
+            grid.putPoint(x, rockLine.start.y, 1)
+        }
+    }
+
 
     private fun parseRockPath(pathLine: String): RockPath {
         val values = pathLine.split(" -> ")
