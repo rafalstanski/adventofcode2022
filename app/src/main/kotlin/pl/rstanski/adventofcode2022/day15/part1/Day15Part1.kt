@@ -38,7 +38,7 @@ object Day15Part1Solution {
 
         sensors.forEach { sensor -> putCannotBe(checkY, grid, sensor, xRange) }
 
-        printGrid(grid, Point(xRange.first, checkY - 15), Point(xRange.first + 100, checkY + 15))
+//        printGrid(grid, Point(xRange.first, checkY - 15), Point(xRange.first + 100, checkY + 15))
 
         return xRange.count { x -> grid.getPoint(x, checkY) == CANNOT_BE }
     }

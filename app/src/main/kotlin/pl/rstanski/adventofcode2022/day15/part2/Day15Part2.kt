@@ -22,8 +22,11 @@ object Day15Part2Solution {
         val sensors = puzzle.lines.map(SensorParser::parseSensor)
         val distressBeacon = DistressBeaconFinder.find(sensors, limit)
 
-        return distressBeacon.x.toLong() * 4000000L + distressBeacon.y.toLong()
+        return distressBeacon.tuningFrequency()
     }
+
+    private fun Point.tuningFrequency(): Long =
+        this.x.toLong() * 4000000L + this.y.toLong()
 }
 
 object DistressBeaconFinder {
