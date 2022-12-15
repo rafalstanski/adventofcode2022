@@ -1,5 +1,7 @@
 package pl.rstanski.adventofcode2022.common
 
+import kotlin.math.absoluteValue
+
 class Grid<T>(
     val xSize: Int,
     val ySize: Int,
@@ -42,6 +44,9 @@ data class Point(
     fun right() = Point(x + 1, y)
     fun up() = Point(x, y + 1)
     fun down() = Point(x, y - 1)
+
+    fun manhattanDistanceTo(otherPoint: Point): Int =
+        (otherPoint.x - x).absoluteValue + (otherPoint.y - y).absoluteValue
 }
 
 class PointOutOfGridException(point: Point) : IllegalArgumentException("Point $point is out of grid")
