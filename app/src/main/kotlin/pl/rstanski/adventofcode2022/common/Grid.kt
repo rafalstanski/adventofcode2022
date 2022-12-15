@@ -47,6 +47,9 @@ data class Point(
 
     fun manhattanDistanceTo(otherPoint: Point): Int =
         (otherPoint.x - x).absoluteValue + (otherPoint.y - y).absoluteValue
+
+    operator fun plus(otherPoint: Point): Point =
+        Point(x + otherPoint.x, y + otherPoint.y)
 }
 
 class PointOutOfGridException(point: Point) : IllegalArgumentException("Point $point is out of grid")

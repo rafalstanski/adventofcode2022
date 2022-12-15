@@ -24,8 +24,8 @@ class Day15Test : BaseTest() {
     @Test
     fun shouldFindCorrectSolutionOfPart2ForSamplePuzzle() {
         //when
-        val solution = part2Solution.solve(puzzle)
+        val solution = part2Solution.solve(puzzle, 20)
         //then
-        assertEquals(expected = 0, actual = solution)
+        assertEquals(expected = 56000011, actual = solution)
     }
 }

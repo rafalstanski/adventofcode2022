@@ -4,8 +4,10 @@ import pl.rstanski.adventofcode2022.common.Point
 
 
 data class Sensor(val location: Point, val closestBeacon: Point) {
-
     val distance = location.manhattanDistanceTo(closestBeacon)
+
+    fun inRange(beacon: Point): Boolean =
+        location.manhattanDistanceTo(beacon) <= distance
 }
 
 object SensorParser {
