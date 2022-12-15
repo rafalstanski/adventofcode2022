@@ -23,42 +23,30 @@ object Day14Part1Solution {
     fun solve(puzzle: Puzzle): Any {
         val rockPaths = puzzle.lines.map { parseRockPath(it) }
 
-        val maxX = rockPaths.maxOf { it.coordinatesList.maxOf { it.x } } + 1
-        val maxY = rockPaths.maxOf { it.coordinatesList.maxOf { it.y } } + 1
+        val maxX = rockPaths.maxOf { it.coordinatesList.maxOf(Point::x) } + 1
+        val maxY = rockPaths.maxOf { it.coordinatesList.maxOf(Point::y) } + 1
 
         val grid = Grid(maxX, maxY) { 0 }
 
         populateGrid(grid, rockPaths)
-
         printGrid(grid)
 
         val sand = Point(500, 0)
 
-
         var sandCount = 0
-
         while (true) {
-            sandCount += 1
             try {
                 tryToPutSand(grid, sand)
             } catch ( e : PointOutOfGridException) {
-                return sandCount - 1
+                return sandCount
             }
-//            println("----")
-//            printGrid(grid)
+            sandCount += 1
         }
-
-        //one unit at a time
-        //produced until the previous unit of sand comes to rest
-
-//        }
-        TODO()
     }
 
     private fun tryToPutSand(grid: Grid<Int>, sand: Point) {
         val tile = grid.getPoint(sand.up())
         grid.putPoint(sand, -1)
-//        println("try: $sand, title: $tile")
 
         if (tile <= 0) {
             tryToPutSand(grid, sand.up())
