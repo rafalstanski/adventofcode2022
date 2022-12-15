@@ -5,6 +5,8 @@ import kotlin.math.min
 import pl.rstanski.adventofcode2022.common.Point
 import pl.rstanski.adventofcode2022.common.Puzzle
 import pl.rstanski.adventofcode2022.common.PuzzleLoader
+import pl.rstanski.adventofcode2022.day15.common.Sensor
+import pl.rstanski.adventofcode2022.day15.common.SensorParser
 import pl.rstanski.adventofcode2022.day15.part1.Objects.BEACON
 import pl.rstanski.adventofcode2022.day15.part1.Objects.CANNOT_BE
 import pl.rstanski.adventofcode2022.day15.part1.Objects.SENSOR
@@ -21,7 +23,7 @@ fun main() {
 
 object Day15Part1Solution {
     fun solve(puzzle: Puzzle, checkY: Int): Any {
-        val sensors = puzzle.lines.map(::parseSensor)
+        val sensors = puzzle.lines.map(SensorParser::parseSensor)
 
         val grid = Grid<Objects>()
         sensors.forEach {
@@ -52,36 +54,6 @@ object Day15Part1Solution {
             }
     }
 
-    private fun parseSensor(line: String): Sensor {
-        // Sensor at x=2, y=18: closest beacon is at x=-2, y=15
-        val parts = line.split(":")
-        val sensorLocation = parseSensorLocation(parts[0])
-        val beaconLocation = parseBeaconLocation(parts[1])
-
-        return Sensor(location = sensorLocation, closestBeacon = beaconLocation)
-    }
-
-    private fun parseBeaconLocation(line: String): Point {
-//        closest beacon is at x=-2, y=15
-        val parts = line.drop("closest beacon is at ".length)
-            .replace(" ", "")
-            .split(",")
-        val x = parts[0].split('=')[1].toInt()
-        val y = parts[1].split('=')[1].toInt()
-
-        return Point(x, y)
-    }
-
-    private fun parseSensorLocation(sensorLine: String): Point {
-        // Sensor at x=2, y=18
-        val parts = sensorLine.drop("Sensor at ".length)
-            .replace(" ", "")
-            .split(",")
-        val x = parts[0].split('=')[1].toInt()
-        val y = parts[1].split('=')[1].toInt()
-
-        return Point(x, y)
-    }
 
     private fun printGrid(grid: Grid<Objects>, corner1: Point, corner2: Point) {
         (corner1.y..corner2.y).forEach { y ->
@@ -101,11 +73,6 @@ object Day15Part1Solution {
 
 enum class Objects {
     SENSOR, BEACON, CANNOT_BE
-}
-
-data class Sensor(val location: Point, val closestBeacon: Point) {
-
-    val distance = location.manhattanDistanceTo(closestBeacon)
 }
 
 class Grid<T> {
