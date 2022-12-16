@@ -75,14 +75,22 @@ fun operate(
                 operate(myLeadTo, myCurrentPath + myLeadTo, eCurrentValve, eCurrentPath, openedValves, pipesByValve, pressure, minutesLeft - 1)
             }
     } else {
+        val samePlace = myPipe == ePipe// && eCurrentPath == myCurrentPath
+
         myLeadsTo
             .forEach { myLeadTo ->
-                eLeadsTo
-                    .forEach { eLeadTo ->
-                        operate(myLeadTo, myCurrentPath + myLeadTo, eLeadTo, eCurrentPath + eLeadTo, openedValves, pipesByValve, pressure, minutesLeft - 1)
-                    }
-            }
+                val eLiteToWithoutMine = eLeadsTo
+                    .filter { (!samePlace) || it != myLeadTo }
 
+                if (eLiteToWithoutMine.isEmpty()) {
+                    operate(myLeadTo, myCurrentPath + myLeadTo, eCurrentValve, eCurrentPath, openedValves, pipesByValve, pressure, minutesLeft - 1)
+                } else {
+                    eLiteToWithoutMine
+                        .forEach { eLeadTo ->
+                            operate(myLeadTo, myCurrentPath + myLeadTo, eLeadTo, eCurrentPath + eLeadTo, openedValves, pipesByValve, pressure, minutesLeft - 1)
+                        }
+                }
+            }
     }
 
     return pressure.saveIfBigger()
