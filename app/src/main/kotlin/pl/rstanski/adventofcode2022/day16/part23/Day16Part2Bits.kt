@@ -4,6 +4,8 @@ import kotlin.math.pow
 import org.paukov.combinatorics3.Generator
 import pl.rstanski.adventofcode2022.common.Puzzle
 import pl.rstanski.adventofcode2022.common.PuzzleLoader.load
+import pl.rstanski.adventofcode2022.day16.common.Pipe
+import pl.rstanski.adventofcode2022.day16.common.PipeParser
 
 fun main() {
     check(solvePart2(load("day16sample.txt")) == 1707)
@@ -14,8 +16,8 @@ fun main() {
 var openableToIndex: Map<String, Int> = emptyMap()
 
 fun solvePart2(puzzle: Puzzle): Any {
-    val pipes = puzzle.lines.map(::parse)
-    val openableValves = pipes.filter(Pipe::openable).map { it.valve }
+    val pipes = puzzle.lines.map(PipeParser::parse)
+    val openableValves = pipes.filter { it.rate > 0 }.map { it.valve }
     openableToIndex = openableValves.mapIndexed {index, valve -> valve to 2.0.pow(index).toInt() }.toMap()
     val indexedPipes = pipes.map { IndexedPipe.fromPipe(it, openableToIndex[it.valve]) }
 
@@ -87,12 +89,6 @@ fun Int.saveIfBigger(): Int {
     return this
 }
 
-
-data class Pipe(val valve: String, val rate: Int, val leadsTo: List<String>) {
-    val openable: Boolean
-        get() = rate > 0
-}
-
 data class IndexedPipe(val valve: String, val index: Int?, val rate: Int, val leadsTo: List<String>) {
     val openable: Boolean
         get() = rate > 0
@@ -101,19 +97,4 @@ data class IndexedPipe(val valve: String, val index: Int?, val rate: Int, val le
         fun fromPipe(pipe: Pipe, index: Int?): IndexedPipe =
             IndexedPipe(pipe.valve, index, pipe.rate, pipe.leadsTo)
     }
-}
-
-
-fun parse(line: String): Pipe {
-    //Valve AA has flow rate=0; tunnels lead to valves DD, II, BB
-    val valve = line.drop("Valve ".length).take(2)
-    val rateAndLead = line.drop("Valve AA has flow rate=".length).split(";")
-    val rate = rateAndLead[0].toInt()
-    val lead = if (rateAndLead[1].contains("tunnels")) {
-        rateAndLead[1].drop(" tunnels lead to valves ".length).replace(" ", "").split(",")
-    } else {
-        rateAndLead[1].drop(" tunnel lead to valves ".length).replace(" ", "").split(",")
-    }
-
-    return Pipe(valve, rate, lead)
 }
