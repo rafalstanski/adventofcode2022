@@ -30,6 +30,8 @@ dependencies {
     // This dependency is used by the application.
     implementation("com.google.guava:guava:31.0.1-jre")
 
+    implementation("com.github.dpaukov:combinatoricslib3:3.3.3")
+
     // Use the Kotlin test library.
     testImplementation("org.jetbrains.kotlin:kotlin-test")
 

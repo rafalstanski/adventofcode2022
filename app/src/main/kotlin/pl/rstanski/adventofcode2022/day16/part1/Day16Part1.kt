@@ -13,37 +13,6 @@ var max = 0
 
 fun solvePart1(puzzle: Puzzle): Any {
     val pipes = puzzle.lines.map(::parse)
-//    val pipesByValve = pipes.associateBy { it.valve }
-//
-//    val graph: GraphImpl<String, Int> = GraphImpl(directed = true, 1)
-//    pipes.forEach { pipe -> pipe.leadsTo.forEach { leadsTo -> graph.addArc(pipe.valve to leadsTo) } }
-//
-//    val activeValves = pipes.filter { it.rate > 0 }.map { it.valve } - "AA"
-//    println("activeValves: $activeValves")
-//    val permutationsCount = (1..activeValves.size).map(Int::toLong).reduce(Long::times)
-//    println("activeValves: ${activeValves.size}, permutation: $permutationsCount")
-//
-//    val permutations = activeValves.permutations()
-//    println("permutations: ${permutations.size}")
-//
-//    max = permutations.map { permutation ->
-//        var currentValve = "AA"
-//        var minutesLeft = 29
-//        var sum = 0
-//        permutation.forEach {
-//            val (_, value) = shortestPath(graph, currentValve, it)
-//            minutesLeft -= value.toInt()
-//            val rate = pipesByValve.getValue(it).rate
-//
-//            sum += minutesLeft * rate
-//            minutesLeft -= 1
-//
-//            currentValve = it
-//        }
-//
-//        sum
-//    }.maxOf { it }
-
     val pipesByValve = pipes.associateBy { it.valve }
 
     operate("AA", listOf("AA"), setOf(), pipesByValve, 0, 29)

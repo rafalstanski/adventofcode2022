@@ -1,5 +1,6 @@
 package pl.rstanski.adventofcode2022.day16.part2
 
+import java.time.Instant
 import pl.rstanski.adventofcode2022.common.Puzzle
 import pl.rstanski.adventofcode2022.common.PuzzleLoader
 import pl.rstanski.adventofcode2022.day16.part1.max
@@ -10,13 +11,19 @@ fun main() {
     println("solution: " + solvePart2(PuzzleLoader.load("day16.txt")))
 }
 
+var openableValves = setOf<String>()
+
 fun solvePart2(puzzle: Puzzle): Any {
     val pipes = puzzle.lines.map(::parse)
     val pipesByValve = pipes.associateBy { it.valve }
 
-    operate("AA", listOf("AA"), "AA", listOf("AA"), setOf(), pipesByValve, 0, 25)
+    openableValves = pipes.filter { it.rate > 0 }.map { it.valve }.toSet()
 
+    println(Instant.now())
+    operate("AA", listOf("AA"), "AA", listOf("AA"), setOf(), pipesByValve, 0, 25)
     println(max)
+    println(Instant.now())
+
     return max
 }
 
@@ -30,7 +37,7 @@ fun operate(
     pressure: Int,
     minutesLeft: Int
 ): Int {
-    if (minutesLeft == 0) {
+    if (minutesLeft == 0 || openedValves.size == openableValves.size) {
         return pressure.saveIfBigger()
     }
 
