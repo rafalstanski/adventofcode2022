@@ -3,7 +3,7 @@ package pl.rstanski.adventofcode2022.day17.part1
 import pl.rstanski.adventofcode2022.common.Point
 import pl.rstanski.adventofcode2022.common.Puzzle
 import pl.rstanski.adventofcode2022.common.PuzzleLoader.load
-import pl.rstanski.adventofcode2022.day17.common.Grid
+import pl.rstanski.adventofcode2022.day17.common.Cave
 import pl.rstanski.adventofcode2022.day17.common.printGrid
 
 fun main() {
@@ -22,7 +22,7 @@ private fun solvePart1(puzzle: Puzzle): Any {
     //Each rock appears so that its left edge is two units away from the left wall
     //bottom edge is three units above the highest rock in the room (or the floor, if there isn't one).
 
-    val cave = Grid()
+    val cave = Cave()
 
     var directionIndex = 0
     var shapeIndex = 0
@@ -38,12 +38,13 @@ private fun solvePart1(puzzle: Puzzle): Any {
         rock.push(direction, cave)
 
         if (! rock.moveDown(cave)) {
+            rocksStopped++
             rock.paint(cave)
+
             shapeIndex++
             shapeIndex = shapeIndex.mod(5)
             rock = Shapes.createRock(shapeIndex)
             rock.placeRock(cave)
-            rocksStopped++
         }
     }
     printGrid(cave, Point(0,0), Point(6, 50))
@@ -72,11 +73,11 @@ sealed class Rock(var position: Point = Point(0,0)) {
         return points().map { it + position }
     }
 
-    fun placeRock(cave: Grid) {
+    fun placeRock(cave: Cave) {
         position = Point(2, 3 + cave.top + 1)
     }
 
-    fun push(direction: Direction, cave: Grid) {
+    fun push(direction: Direction, cave: Cave) {
         val moved = positionedPoints().map { direction.move(it) }
         val outOfBound = moved.find { it.x < 0 || it.x >= 7 || cave.getPoint(it) == 1 }
         if (outOfBound == null) {
@@ -84,7 +85,7 @@ sealed class Rock(var position: Point = Point(0,0)) {
         }
     }
 
-    fun moveDown(cave: Grid): Boolean {
+    fun moveDown(cave: Cave): Boolean {
         val moved = positionedPoints().map { it.down() }
         val outOfBound = moved.find { it.y < 0 || cave.getPoint(it) == 1 }
         if (outOfBound == null) {
@@ -95,7 +96,7 @@ sealed class Rock(var position: Point = Point(0,0)) {
         }
     }
 
-    fun paint(cave: Grid) {
+    fun paint(cave: Cave) {
         positionedPoints().forEach {cave.putPoint(it, 1)}
     }
 }
