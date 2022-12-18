@@ -40,14 +40,9 @@ private fun solvePart2(puzzle: Puzzle): Any {
             rock.paint(cave)
 
             val tipState = TipState(shapeIndex, directionIndex, tipOf(cave, 20))
-//            if (rocksStopped == 3L) {
-//                val caveForTip = Cave()
-//                tipState.tipPoints.forEach { caveForTip.putPoint(it, 1) }
-//                printGrid(caveForTip, Point(0, 0), Point(6, 50))
-//            }
 
             if (patterns.containsKey(tipState)) {
-                println("!!!!!!! pattern matched: $tipState")
+//                println("!!!!!!! pattern matched: $tipState")
                 val (previousTop, previousRocksStopped) = patterns[tipState]!!
                 val heightDiff = cave.top - previousTop
                 val stoppedDiff = rocksStopped - previousRocksStopped
