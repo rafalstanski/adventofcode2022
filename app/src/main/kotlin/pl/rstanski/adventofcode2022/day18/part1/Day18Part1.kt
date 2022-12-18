@@ -17,6 +17,15 @@ fun main() {
 private fun solvePart1(puzzle: Puzzle): Any {
     val positions = puzzle.lines.map { parse(it) }
 
+    println("minX: " + positions.minOf { it.x })
+    println("minY: " + positions.minOf { it.y })
+    println("minZ: " + positions.minOf { it.z })
+
+    println("maxX: " + positions.maxOf { it.x })
+    println("maxY: " + positions.maxOf { it.y })
+    println("maxZ: " + positions.maxOf { it.z })
+
+
     val cubes = positions.map { Cube(it) }
     return cubes.map { it.countUncoveredSides(positions) }.sumOf { it }
 }
