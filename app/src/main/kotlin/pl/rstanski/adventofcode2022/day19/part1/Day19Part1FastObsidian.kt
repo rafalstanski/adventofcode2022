@@ -1,4 +1,4 @@
-package pl.rstanski.adventofcode2022.day19.part2
+package pl.rstanski.adventofcode2022.day19.part1
 
 import java.time.Instant
 import pl.rstanski.adventofcode2022.common.Puzzle
@@ -7,11 +7,15 @@ import pl.rstanski.adventofcode2022.day19.common.BlueprintsParser.parseBlueprint
 import pl.rstanski.adventofcode2022.day19.common.MineSessionFastObsidian
 
 fun main() {
-    val solution = solvePart2(load("day19.txt"))
+    val testSolution = solvePart1(load("day19sample.txt"))
+    println("test solution: $testSolution")
+    check(testSolution == 33)
+
+    val solution = solvePart1(load("day19.txt"))
     println("solution: $solution")
 }
 
-private fun solvePart2(puzzle: Puzzle): Any {
+private fun solvePart1(puzzle: Puzzle): Any {
     val blueprints = parseBlueprints(puzzle)
     blueprints.forEach(::println)
 
@@ -25,6 +29,5 @@ private fun solvePart2(puzzle: Puzzle): Any {
     }
     qualityLevels.forEach { println("mined geode (blueprint = ${it.first}) - ${it.second}") }
 
-    return qualityLevels.map {it.second.toLong() }
-        .reduce {acc: Long, l: Long -> acc * l }
+    return qualityLevels.sumOf { it.first * it.second }
 }
