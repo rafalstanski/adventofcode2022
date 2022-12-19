@@ -17,7 +17,7 @@ class MineSessionFastObsidian(private val blueprint: Blueprint, private val minu
         createRoobot: RobotType?,
         robots: List<RobotType>
     ): Int {
-        var mineralsMinedThisMinute = mineralsMined.copy()
+        val mineralsMinedThisMinute = mineralsMined.copy()
 
         // create another robot
         val robotsAfterCreate = when (createRoobot) {
@@ -37,16 +37,16 @@ class MineSessionFastObsidian(private val blueprint: Blueprint, private val minu
             else -> {
                 if (mineralsMinedThisMinute.contains(blueprint.geodeRobotCosts)) {
                     recursiveMine(minute + 1, mineralsMinedThisMinute, GEODE, robotsAfterCreate)
-                } else if (robots.count { it == OBSIDIAN } < blueprint.maxObsidianCost && mineralsMinedThisMinute.contains(blueprint.obsidianRobotCost)) {
+                } else if (robotsAfterCreate.count { it == OBSIDIAN } < blueprint.maxObsidianCost && mineralsMinedThisMinute.contains(blueprint.obsidianRobotCost)) {
                     recursiveMine(minute + 1, mineralsMinedThisMinute, OBSIDIAN, robotsAfterCreate)
                 } else {
                     val max = mutableListOf<Int>()
 
-                    if (robots.count { it == CLAY } < blueprint.maxClayCost && mineralsMinedThisMinute.contains(blueprint.clayRobotCost)) {
+                    if (robotsAfterCreate.count { it == CLAY } < blueprint.maxClayCost && mineralsMinedThisMinute.contains(blueprint.clayRobotCost)) {
                         max += recursiveMine(minute + 1, mineralsMinedThisMinute, CLAY, robotsAfterCreate)
                     }
 
-                    if (robots.count { it == ORE } < blueprint.maxOreCost && mineralsMinedThisMinute.contains(blueprint.oreRobotCost)) {
+                    if (robotsAfterCreate.count { it == ORE } < blueprint.maxOreCost && mineralsMinedThisMinute.contains(blueprint.oreRobotCost)) {
                         max += recursiveMine(minute + 1, mineralsMinedThisMinute, ORE, robotsAfterCreate)
                     }
 

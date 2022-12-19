@@ -17,7 +17,7 @@ class MineSession(private val blueprint: Blueprint, private val minutesLimit: In
         createRoobot: RobotType?,
         robots: List<RobotType>
     ): Int {
-        var mineralsMinedThisMinute = mineralsMined.copy()
+        val mineralsMinedThisMinute = mineralsMined.copy()
 
         // create another robot
         val robotsAfterCreate = when (createRoobot) {

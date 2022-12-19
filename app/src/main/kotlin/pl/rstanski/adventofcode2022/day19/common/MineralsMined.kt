@@ -16,5 +16,9 @@ data class MineralsMined(
         ore -= cost.ore
         clay -= cost.clay
         obsidian -= cost.obsidian
+
+        require(ore >= 0)
+        require(clay >= 0)
+        require(obsidian >= 0)
     }
 }

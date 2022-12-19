@@ -4,7 +4,7 @@ import java.time.Instant
 import pl.rstanski.adventofcode2022.common.Puzzle
 import pl.rstanski.adventofcode2022.common.PuzzleLoader.load
 import pl.rstanski.adventofcode2022.day19.common.BlueprintsParser.parseBlueprints
-import pl.rstanski.adventofcode2022.day19.common.MineSession
+import pl.rstanski.adventofcode2022.day19.common.MineSessionCached
 
 fun main() {
     val testSolution = solvePart1(load("day19sample.txt"))
@@ -15,14 +15,13 @@ fun main() {
     println("solution: $solution")
 }
 
-
 private fun solvePart1(puzzle: Puzzle): Any {
     val blueprints = parseBlueprints(puzzle)
     blueprints.forEach(::println)
 
     val qualityLevels = blueprints.map { blueprint ->
         println("${Instant.now()} start mining with blueprint: $blueprint")
-        val mineSession = MineSession(blueprint, 24)
+        val mineSession = MineSessionCached(blueprint, 24)
         val minedGeode = mineSession.mine()
         println("${Instant.now()} Mined geode: $minedGeode")
 
