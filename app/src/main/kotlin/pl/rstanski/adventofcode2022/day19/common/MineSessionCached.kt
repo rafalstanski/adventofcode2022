@@ -5,42 +5,11 @@ import pl.rstanski.adventofcode2022.day19.common.RobotType.GEODE
 import pl.rstanski.adventofcode2022.day19.common.RobotType.OBSIDIAN
 import pl.rstanski.adventofcode2022.day19.common.RobotType.ORE
 
-
-data class State(
-    val minute: Int,
-    val mineralsMined: MineralsMined,
-    val robots: Robots
-)
-
-data class Robots(
-    var ore: Int = 0,
-    var clay: Int = 0,
-    var obsidian: Int = 0,
-    var geode: Int = 0
-) {
-    fun add(robotType: RobotType): Robots {
-        when (robotType) {
-            ORE -> ore++
-            CLAY -> clay++
-            OBSIDIAN -> obsidian++
-            GEODE -> geode++
-        }
-        return this
-    }
-
-    fun mine(mineralsMined: MineralsMined) {
-        mineralsMined.ore += ore
-        mineralsMined.clay += clay
-        mineralsMined.obsidian += obsidian
-        mineralsMined.geode += geode
-    }
-}
-
-class MineSessionCached(private val blueprint: Blueprint, private val minutesLimit: Int) {
+class MineSessionCached(private val blueprint: Blueprint, private val minutesLimit: Int) : MineSession {
 
     private var visitedStates = mutableMapOf<State, Int>()
 
-    fun mine(): Int {
+    override fun mine(): Int {
         val robots = Robots(ore = 1)
         return recursiveMine(1, MineralsMined(), null, robots)
     }
@@ -105,4 +74,34 @@ class MineSessionCached(private val blueprint: Blueprint, private val minutesLim
 
     private fun canBuildRobot(robotType: RobotType, mineralsMined: MineralsMined): Boolean =
         mineralsMined.contains(blueprint.robotCost(robotType))
+}
+
+data class State(
+    val minute: Int,
+    val mineralsMined: MineralsMined,
+    val robots: Robots
+)
+
+data class Robots(
+    var ore: Int = 0,
+    var clay: Int = 0,
+    var obsidian: Int = 0,
+    var geode: Int = 0
+) {
+    fun add(robotType: RobotType): Robots {
+        when (robotType) {
+            ORE -> ore++
+            CLAY -> clay++
+            OBSIDIAN -> obsidian++
+            GEODE -> geode++
+        }
+        return this
+    }
+
+    fun mine(mineralsMined: MineralsMined) {
+        mineralsMined.ore += ore
+        mineralsMined.clay += clay
+        mineralsMined.obsidian += obsidian
+        mineralsMined.geode += geode
+    }
 }

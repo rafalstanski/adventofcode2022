@@ -5,9 +5,9 @@ import pl.rstanski.adventofcode2022.day19.common.RobotType.GEODE
 import pl.rstanski.adventofcode2022.day19.common.RobotType.OBSIDIAN
 import pl.rstanski.adventofcode2022.day19.common.RobotType.ORE
 
-class MineSessionFastObsidian(private val blueprint: Blueprint, private val minutesLimit: Int) {
+class MineSessionFastObsidian(private val blueprint: Blueprint, private val minutesLimit: Int) : MineSession {
 
-    fun mine(): Int {
+    override fun mine(): Int {
         return recursiveMine(1, MineralsMined(), null, listOf(ORE))
     }
 
