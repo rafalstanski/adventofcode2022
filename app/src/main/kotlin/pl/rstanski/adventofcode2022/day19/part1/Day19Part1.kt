@@ -36,7 +36,7 @@ private fun solvePart1(puzzle: Puzzle): Any {
     val qualityLevels = blueprints.map { blueprint ->
         val mine = mineWithBlueprint(blueprint)
 
-        blueprint.index to mine.geode * blueprint.index
+        blueprint.index to mine * blueprint.index
     }
 
     qualityLevels.forEach { println("qualityLevels: $it") }
@@ -44,49 +44,63 @@ private fun solvePart1(puzzle: Puzzle): Any {
     return qualityLevels.sumOf { it.second }
 }
 
-fun mineWithBlueprint(blueprint: Blueprint): Mine {
-    println("start mining with blueprint: $blueprint")
-    var minute = 1
-    var mine = Mine()
-    val robots = mutableListOf(Robot(ORE))
 
-    while (minute <= 24) {
-        val countOfEachRobotStart = robots.groupBy { it.type }.mapValues { entry -> entry.value.count() }
-        println("minute (start): $minute: mine: $mine, robots: $countOfEachRobotStart")
+class MineSession(private val blueprint: Blueprint) {
 
+    fun mine(): Int {
+        return recursiveMine(1, MineralsMined(), null, listOf(Robot(ORE)))
+    }
 
-        // try to create another robot
-        val createdRobot = mutableListOf<Robot>()
-        if (mine.contains(blueprint.geodeRobotCosts)) {
-            println(blueprint.geodeRobotCosts)
+    private fun recursiveMine(minute: Int, mineralsMined: MineralsMined, createRoobot: RobotType?, robots: List<Robot>): Int {
+        var mineralsMinedThisMinute = mineralsMined.copy()
 
-            createdRobot += Robot(GEODE)
-            mine.take(blueprint.geodeRobotCosts)
-        } else if (mine.contains(blueprint.obsidianRobotCost)) {
-            createdRobot += Robot(OBSIDIAN)
-            mine.take(blueprint.obsidianRobotCost)
-        } else if (mine.contains(blueprint.clayRobotCost)) {
-            createdRobot += Robot(CLAY)
-            mine.take(blueprint.clayRobotCost)
-        } else if (mine.contains(blueprint.oreRobotCost)) {
-            createdRobot += Robot(ORE)
-            mine.take(blueprint.oreRobotCost)
+        // create another robot
+        val robotsAfterCreate = when (createRoobot) {
+            null -> robots
+            else -> {
+                val robotCosts = blueprint.robotCosts(createRoobot)
+                mineralsMinedThisMinute.take(robotCosts)
+                robots + Robot(createRoobot)
+            }
         }
 
         // mine
-        robots.forEach { it.mine(mine) }
+        robots.forEach { it.mine(mineralsMinedThisMinute) }
 
-        // add to list of all robots
-        robots += createdRobot
+        return when (minute) {
+            24 -> mineralsMinedThisMinute.geode
+            else -> {
+                if (mineralsMined.contains(blueprint.geodeRobotCosts)) {
+                    recursiveMine(minute + 1, mineralsMined, GEODE, robotsAfterCreate)
+                } else {
+                    val max = mutableListOf<Int>()
 
-        val countOfCreatedEachRobot = createdRobot.groupBy { it.type }.mapValues { entry -> entry.value.count() }
-        val countOfEachRobot = robots.groupBy { it.type }.mapValues { entry -> entry.value.count() }
-        println("minute (end): $minute: mine: $mine, created robots: $countOfCreatedEachRobot, robots: $countOfEachRobot")
+                    if (mineralsMined.contains(blueprint.obsidianRobotCost)) {
+                        max += recursiveMine(minute + 1, mineralsMined, OBSIDIAN, robotsAfterCreate)
+                    }
 
-        minute++
+                    if (mineralsMined.contains(blueprint.clayRobotCost)) {
+                        max += recursiveMine(minute + 1, mineralsMined, CLAY, robotsAfterCreate)
+                    }
+
+                    if (mineralsMined.contains(blueprint.oreRobotCost)) {
+                        max += recursiveMine(minute + 1, mineralsMined, ORE, robotsAfterCreate)
+                    }
+
+                    max += recursiveMine(minute + 1, mineralsMinedThisMinute, null, robotsAfterCreate)
+
+                    max.maxOf { it }
+                }
+            }
+        }
     }
+}
 
-    return mine
+
+fun mineWithBlueprint(blueprint: Blueprint): Int {
+    println("start mining with blueprint: $blueprint")
+    val mineSession = MineSession(blueprint)
+    return mineSession.mine()
 }
 
 enum class RobotType {
@@ -94,15 +108,14 @@ enum class RobotType {
 }
 
 data class Robot(val type: RobotType) {
-    fun mine(mine: Mine) {
+    fun mine(mineralsMined: MineralsMined) {
         when (type) {
-            ORE -> mine.ore++
-            CLAY -> mine.clay++
-            OBSIDIAN -> mine.obsidian++
-            GEODE -> mine.geode++
+            ORE -> mineralsMined.ore++
+            CLAY -> mineralsMined.clay++
+            OBSIDIAN -> mineralsMined.obsidian++
+            GEODE -> mineralsMined.geode++
         }
     }
-
 }
 
 
@@ -119,9 +132,18 @@ data class Blueprint(
     val clayRobotCost: Cost,
     val obsidianRobotCost: Cost,
     val geodeRobotCosts: Cost
-)
+) {
+    fun robotCosts(createRoobot: RobotType): Cost {
+        return when (createRoobot) {
+            ORE -> oreRobotCost
+            CLAY -> clayRobotCost
+            OBSIDIAN -> obsidianRobotCost
+            GEODE -> geodeRobotCosts
+        }
+    }
+}
 
-data class Mine(var ore: Int = 0, var clay: Int = 0, var obsidian: Int = 0, var geode: Int = 0) {
+data class MineralsMined(var ore: Int = 0, var clay: Int = 0, var obsidian: Int = 0, var geode: Int = 0) {
     fun contains(cost: Cost): Boolean {
         return ore - cost.ore >= 0
                 && clay - cost.clay >= 0
@@ -132,6 +154,10 @@ data class Mine(var ore: Int = 0, var clay: Int = 0, var obsidian: Int = 0, var 
         ore -= cost.ore
         clay -= cost.clay
         obsidian -= cost.obsidian
+    }
+
+    operator fun minus(cost: Cost): MineralsMined {
+        return MineralsMined(ore - cost.ore, clay - cost.clay, obsidian - cost.obsidian, geode)
     }
 }
 
