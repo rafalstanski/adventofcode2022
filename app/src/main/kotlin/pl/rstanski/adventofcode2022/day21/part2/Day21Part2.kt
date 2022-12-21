@@ -1,8 +1,7 @@
 package pl.rstanski.adventofcode2022.day21.part2
 
-import java.math.BigInteger
-import java.math.BigInteger.TWO
-import java.math.BigInteger.ZERO
+import java.math.BigDecimal
+import java.math.MathContext
 import pl.rstanski.adventofcode2022.common.Puzzle
 import pl.rstanski.adventofcode2022.common.PuzzleLoader.load
 
@@ -15,25 +14,25 @@ fun main() {
     println("solution: $solution")
 }
 
-var humn = BigInteger.valueOf(301)
-var rootLeftRight: Pair<BigInteger, BigInteger> = TWO to ZERO
+var humn = BigDecimal.valueOf(0)
+var rootLeftRight: Pair<BigDecimal, BigDecimal> = BigDecimal.ONE to BigDecimal.TEN
 
 private fun solvePart2(puzzle: Puzzle): Any {
     val jobs = puzzle.lines.map { JobParser.parseJob(it) }
     val jobsByName = jobs.associateBy { it.monkey }
 
-    var start = BigInteger.valueOf(0) //        3840000000000=(7720451903493, 7628196411405): 92255492088
-    var stop = BigInteger.valueOf(3880000000000) ////        3880000000000=(7620465371505, 7628196411405): -7731039900
+    var start = BigDecimal.valueOf(0) //        3840000000000=(7720451903493, 7628196411405): 92255492088
+    var stop = BigDecimal.valueOf(13880000000000) ////        3880000000000=(7620465371505, 7628196411405): -7731039900
     humn = middleValueBetween(start, stop)
 
     while (rootLeftRight.first != rootLeftRight.second) {
         jobsByName.getValue("root")
             .run(jobsByName)
 
-        if (rootLeftRight.first - rootLeftRight.second > ZERO) {
+        if (rootLeftRight.first > rootLeftRight.second) {
             start = humn
             humn = middleValueBetween(start, stop)
-        } else if (rootLeftRight.first - rootLeftRight.second < ZERO) {
+        } else if (rootLeftRight.first < rootLeftRight.second) {
             stop = humn
             humn = middleValueBetween(start, stop)
         }
@@ -42,10 +41,8 @@ private fun solvePart2(puzzle: Puzzle): Any {
     return humn
 }
 
-private fun middleValueBetween(start: BigInteger, stop: BigInteger) =
-    start + (stop - start) / TWO
-
-// 3876907167497
+private fun middleValueBetween(start: BigDecimal, stop: BigDecimal) =
+    start + (stop - start) / BigDecimal.valueOf(2)
 
 object JobParser {
 
@@ -55,7 +52,7 @@ object JobParser {
         val x = parts[1].trim()
 
         return if (x[0].isDigit()) {
-            Job(name, x.toBigInteger())
+            Job(name, x.toBigDecimal())
         } else {
             val opParts = x.split(" ")
             Job(name, null, Operation(opParts[0], opParts[2], opParts[1][0]))
@@ -65,20 +62,20 @@ object JobParser {
 
 data class Operation(val left: String, val right: String, val what: Char) {
 
-    fun calculate(leftValue: BigInteger, rightValue: BigInteger): BigInteger {
+    fun calculate(leftValue: BigDecimal, rightValue: BigDecimal): BigDecimal {
         return when(what) {
             '+' -> leftValue + rightValue
             '-' -> leftValue - rightValue
             '*' -> leftValue * rightValue
-            '/' -> leftValue / rightValue
+            '/' -> leftValue.divide(rightValue, MathContext.DECIMAL64)
             else -> throw IllegalArgumentException()
         }
     }
 }
 
-data class Job(val monkey: String, val value: BigInteger? = null, val operation: Operation? = null) {
+data class Job(val monkey: String, val value: BigDecimal? = null, val operation: Operation? = null) {
 
-    fun run(jobs: Map<String, Job>): BigInteger {
+    fun run(jobs: Map<String, Job>): BigDecimal {
         if (monkey == "humn") return humn
 
         if (value != null) {
