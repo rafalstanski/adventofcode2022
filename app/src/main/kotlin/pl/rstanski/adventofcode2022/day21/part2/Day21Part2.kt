@@ -7,55 +7,45 @@ import pl.rstanski.adventofcode2022.common.Puzzle
 import pl.rstanski.adventofcode2022.common.PuzzleLoader.load
 
 fun main() {
-//    val testSolution = solvePart2(load("day21sample.txt"))
-//    println("test solution: $testSolution")
-//    check(testSolution == 1623178306L)
+    val testSolution = solvePart2(load("day21sample.txt"))
+    println("test solution: $testSolution")
+    check(testSolution == 1623178306L)
 
     val solution = solvePart2(load("day21.txt"))
     println("solution: $solution")
 }
 
-var humn: BigInteger = BigInteger.valueOf(301)
-var previousDiff : BigInteger = BigInteger.valueOf(92255492088)
+var humn = BigInteger.valueOf(301)
 var rootLeftRight: Pair<BigInteger, BigInteger> = TWO to ZERO
 
 private fun solvePart2(puzzle: Puzzle): Any {
     val jobs = puzzle.lines.map { JobParser.parseJob(it) }
     val jobsByName = jobs.associateBy { it.monkey }
 
-    var start = BigInteger.valueOf(3840000000000)
-    var stop = BigInteger.valueOf(3880000000000)
+    var start = BigInteger.valueOf(0) //        3840000000000=(7720451903493, 7628196411405): 92255492088
+    var stop = BigInteger.valueOf(3880000000000) ////        3880000000000=(7620465371505, 7628196411405): -7731039900
+    humn = middleValueBetween(start, stop)
 
-    //        3840000000000=(7720451903493, 7628196411405): 92255492088
-//        3880000000000=(7620465371505, 7628196411405): -7731039900
+    while (rootLeftRight.first != rootLeftRight.second) {
+        jobsByName.getValue("root")
+            .run(jobsByName)
 
-
-    humn = start + (stop - start) / TWO
-
-//    while (rootLeftRight.first != rootLeftRight.second) {
-//        jobsByName.getValue("root").run(jobsByName)
-//        if (rootLeftRight.first - rootLeftRight.second > ZERO) {
-//            start = humn
-//            humn = start + (stop - start) / TWO
-//        } else if (rootLeftRight.first - rootLeftRight.second < ZERO) {
-//            stop = humn
-//            humn = start + (stop - start) / TWO
-//        }
-//        if (previousDiff >= (rootLeftRight.first - rootLeftRight.second).abs()) {
-//            println("($start, $stop) $humn: ${rootLeftRight.first - rootLeftRight.second} = (${rootLeftRight.first} ${rootLeftRight.second}")
-//            previousDiff = (rootLeftRight.first - rootLeftRight.second).abs()
-//        }
-//    }
-
-    println(BigInteger.valueOf(3).divide(BigInteger.valueOf(2)))
-
-    humn = BigInteger.valueOf(3876907167497)
-//    humn = BigInteger.valueOf(301)
-    jobsByName.getValue("root").run(jobsByName)
-    println(rootLeftRight)
+        if (rootLeftRight.first - rootLeftRight.second > ZERO) {
+            start = humn
+            humn = middleValueBetween(start, stop)
+        } else if (rootLeftRight.first - rootLeftRight.second < ZERO) {
+            stop = humn
+            humn = middleValueBetween(start, stop)
+        }
+    }
 
     return humn
 }
+
+private fun middleValueBetween(start: BigInteger, stop: BigInteger) =
+    start + (stop - start) / TWO
+
+// 3876907167497
 
 object JobParser {
 
@@ -72,7 +62,6 @@ object JobParser {
         }
     }
 }
-
 
 data class Operation(val left: String, val right: String, val what: Char) {
 
