@@ -16,16 +16,16 @@ fun main() {
 private fun solvePart2(puzzle: Puzzle): Any {
     val numbers = puzzle.lines.toLongs()
 
-    val encryptedFile = EncryptedFile(numbers)
+    val encryptedFile = EncryptedFile(numbers, 811589153)
     repeat(10) {
         encryptedFile.mix()
     }
     return encryptedFile.groveCoordinatesSum()
 }
 
-class EncryptedFile(originalNumbers: List<Long>) {
+class EncryptedFile(originalNumbers: List<Long>, decryptionKey: Long) {
     private val original = originalNumbers
-        .mapIndexed { index: Int, i: Long ->  NumberNode(index, i * 811589153) }
+        .mapIndexed { index: Int, i: Long ->  NumberNode(index, i * decryptionKey) }
         .toMutableList()
     private val mixed = original.toMutableList()
 
