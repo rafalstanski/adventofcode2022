@@ -4,9 +4,11 @@ import pl.rstanski.adventofcode2022.common.Point
 import pl.rstanski.adventofcode2022.common.Puzzle
 import pl.rstanski.adventofcode2022.common.PuzzleLoader.load
 import pl.rstanski.adventofcode2022.common.SplitLines
-import pl.rstanski.adventofcode2022.common.toInts
+import pl.rstanski.adventofcode2022.day22.common.InstructionsParser.parseInstructions
+import pl.rstanski.adventofcode2022.day22.common.Move
+import pl.rstanski.adventofcode2022.day22.common.PasswordCalculator.calculatePassword
+import pl.rstanski.adventofcode2022.day22.common.Rotate
 import pl.rstanski.adventofcode2022.day22.part1.BoardParser.parseBoard
-import pl.rstanski.adventofcode2022.day22.part1.InstructionsParser.parseInstructions
 import pl.rstanski.adventofcode2022.day22.part1.StartingPointFinder.findStartingPoint
 
 fun main() {
@@ -17,60 +19,6 @@ fun main() {
     val solution = solvePart1(load("day22.txt"))
     println("solution: $solution")
 }
-
-object InstructionsParser {
-
-    fun parseInstructions(instructionsLine: String): List<Instruction> {
-        val moves = Regex("(\\d+)")
-            .findAll(instructionsLine)
-            .map { it.groupValues[1] }.toList()
-            .toInts()
-            .map { Move(it) }
-
-        val rotates = Regex("([RL])")
-            .findAll(instructionsLine)
-            .map { it.groupValues[1] }
-            .toList()
-            .map { Rotate(it.first()) }
-
-        val instructions = mutableListOf<Instruction>(moves.first())
-        (rotates.indices).forEach {
-            instructions += rotates[it]
-            instructions += moves[it + 1]
-        }
-
-        return instructions
-    }
-}
-
-object BoardParser {
-
-    fun parseBoard(mapOfTheBoard: List<String>): Grid<Char> {
-        val board = Grid<Char>()
-
-        mapOfTheBoard.forEachIndexed { y, row ->
-            row.forEachIndexed { x, column ->
-                when (column) {
-                    ' ' -> {} // board.putPoint(x,y, '#')
-                    else -> board.putPoint(x, y, column)
-                }
-            }
-        }
-
-        return board
-    }
-}
-
-object StartingPointFinder {
-    fun findStartingPoint(mapOfTheBoard: List<String>): Point {
-        val column = mapOfTheBoard.first()
-            .mapIndexed { index, char -> index to char }
-            .find { it.second == '.' }!!
-            .first
-        return Point(column, 0)
-    }
-}
-
 
 private fun solvePart1(puzzle: Puzzle): Any {
     val (mapOfTheBoard, pathYouMustFollow) = SplitLines.split(puzzle.lines)
@@ -119,64 +67,38 @@ private fun solvePart1(puzzle: Puzzle): Any {
 
     printGrid(board, Point(0, 0), Point(20, 12))
 
-    println(currentPosition)
-    println(facingDirection)
-
-    return 1000L * (currentPosition.y + 1) + 4L * (currentPosition.x + 1) + numberOfDirection(facingDirection)
+    return calculatePassword(currentPosition, facingDirection)
 }
 
-sealed class Instruction
+object BoardParser {
 
-data class Move(val count: Int) : Instruction()
-data class Rotate(val turnDirection: Char) : Instruction() {
+    fun parseBoard(mapOfTheBoard: List<String>): Grid<Char> {
+        val board = Grid<Char>()
 
-    private val rotate = listOf(Point(1, 0), Point(0, 1), Point(-1, 0), Point(0, -1))
-    fun rotate(lookingAt: Point): Point {
-        val index = rotate.indexOf(lookingAt)
-        val newIndex: Int = when (turnDirection) {
-            'R' -> index + 1
-            'L' -> index - 1
-            else -> throw IllegalArgumentException()
-        }
-        return rotate[newIndex.mod(4)]
-    }
-}
-
-fun numberOfDirection(faceingDirection: Point): Int {
-    val rotate = listOf(Point(1, 0), Point(0, 1), Point(-1, 0), Point(0, -1))
-
-    return rotate.indexOf(faceingDirection)
-}
-
-private fun printGrid(grid: Grid<Char>, corner1: Point, corner2: Point) {
-    (corner1.y..corner2.y).forEach { y ->
-        print(y.toString().padStart(3))
-        (corner1.x..corner2.x).forEach { x ->
-            when (grid.getPoint(x, y)) {
-                null -> print(" ")
-                else -> print(grid.getPoint(x, y))
+        mapOfTheBoard.forEachIndexed { y, row ->
+            row.forEachIndexed { x, column ->
+                when (column) {
+                    ' ' -> {}
+                    else -> board.putPoint(x, y, column)
+                }
             }
         }
-        println()
+
+        return board
     }
 }
 
-data class Direction(val value: Int, val turnDirection: Char) {
-
-    fun rotate(lookingAt: Point): Point {
-        val rotate = listOf(Point(1, 0), Point(0, 1), Point(-1, 0), Point(0, -1))
-        val index = rotate.indexOf(lookingAt)
-        val newIndex: Int = when (turnDirection) {
-            'R' -> index + 1
-            'L' -> index - 1
-            else -> throw IllegalArgumentException()
-        }
-        return rotate[newIndex.mod(4)]
+object StartingPointFinder {
+    fun findStartingPoint(mapOfTheBoard: List<String>): Point {
+        val column = mapOfTheBoard.first()
+            .mapIndexed { index, char -> index to char }
+            .find { it.second == '.' }!!
+            .first
+        return Point(column, 0)
     }
 }
 
 class Grid<T> {
-
     private val points = mutableMapOf<Point, T>()
 
     fun putPoint(point: Point, value: T) {
@@ -199,6 +121,20 @@ class Grid<T> {
 
     fun getPointsY(y: Int): List<Point> {
         return points.keys.filter { it.y == y }.sortedBy { it.y }
+    }
+
+}
+
+private fun printGrid(grid: Grid<Char>, corner1: Point, corner2: Point) {
+    (corner1.y..corner2.y).forEach { y ->
+        print(y.toString().padStart(3))
+        (corner1.x..corner2.x).forEach { x ->
+            when (grid.getPoint(x, y)) {
+                null -> print(" ")
+                else -> print(grid.getPoint(x, y))
+            }
+        }
+        println()
     }
 }
 
