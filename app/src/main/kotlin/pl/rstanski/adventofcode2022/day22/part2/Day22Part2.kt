@@ -16,23 +16,59 @@ import pl.rstanski.adventofcode2022.day22.part2.Edge.Right
 import pl.rstanski.adventofcode2022.day22.part2.Edge.Top
 import pl.rstanski.adventofcode2022.day22.part2.StartingPointFinder.findStartingPoint
 
-fun main() {
-    val testSolution = solvePart2(load("day22sample.txt"))
-    println("test solution: $testSolution")
-    check(testSolution == 0)
 
-    val solution = solvePart2(load("day22.txt"))
+val goRight = Point(1, 0)
+val goLeft = Point(-1, 0)
+val goUp = Point(0, -1)
+val goDown = Point(0, 1)
+
+fun main() {
+    val testSolution = solvePart2(load("day22sample.txt"), 4) {
+        val size = 4
+        it.addSide(1, Point(8, 0))
+        it.addSide(2, Point(0, 4))
+        it.addSide(3, Point(4, 4))
+        it.addSide(4, Point(8, 4))
+        it.addSide(5, Point(8, 8))
+        it.addSide(6, Point(12, 8))
+
+        it.sideOf(1).addConnection(Left, 3, { prev -> Point(prev.y, 0) }, goDown)
+        it.sideOf(1).addConnection(Top, 5, { prev -> Point(prev.x, size - 1) }, goUp)
+        it.sideOf(1).addConnection(Right, 6, { prev -> Point(size - 1, size - 1 - prev.y) }, goLeft)
+
+        it.sideOf(4).addConnection(Right, 6, { prev -> Point(size - 1 - prev.y, 0) }, goDown)
+        //----
+        it.sideOf(2).addConnection(Left, 6, { prev -> Point(size - 1 - prev.y, size - 1) }, goUp)
+        it.sideOf(2).addConnection(Top, 1, { prev -> Point(size - 1 - prev.x, 0) }, goDown)
+        it.sideOf(2).addConnection(Bottom, 5, { prev -> Point(size - 1 - prev.x, size - 1) }, goDown)
+
+        it.sideOf(3).addConnection(Top, 1, { prev -> Point(0, prev.x) }, Point(1, 0))
+        it.sideOf(3).addConnection(Bottom, 5, { prev -> Point(0, size - 1 - prev.x) }, goRight)
+
+        it.sideOf(5).addConnection(Left, 3, { prev -> Point(size - 1 - prev.y, 0) }, goDown)
+        it.sideOf(5).addConnection(Bottom, 2, { prev -> Point(size - 1 - prev.x, size - 1) }, goUp)
+
+        it.sideOf(6).addConnection(Top, 4, { prev -> Point(size - 1, size - 1 - prev.x) }, goLeft)
+        it.sideOf(6).addConnection(Right, 1, { prev -> Point(0, size - 1 - prev.y) }, goLeft)
+        it.sideOf(6).addConnection(Bottom, 2, { prev -> Point(0, size - 1 - prev.x) }, goRight)
+    }
+    println("test solution: $testSolution")
+    check(testSolution == 5031L)
+
+    val solution = solvePart2(load("day22.txt"), 50) {
+
+    }
     println("solution: $solution")
 }
 
-private fun solvePart2(puzzle: Puzzle): Any {
+private fun solvePart2(puzzle: Puzzle, size: Int, configuration: (Cube) -> Unit): Any {
     val (mapOfTheBoard, pathYouMustFollow) = SplitLines.split(puzzle.lines)
 
     val board = parseBoard(mapOfTheBoard)
     val startingPoint = findStartingPoint(mapOfTheBoard)
     val instructions = parseInstructions(pathYouMustFollow.first())
 
-    val cube = Cube(board, startingPoint, 4)
+    val cube = Cube(board, startingPoint, size, configuration)
     val (position, facingDirection) = cube.go(instructions)
 
     return PasswordCalculator.calculatePassword(position, facingDirection)
@@ -73,37 +109,17 @@ enum class Edge {
     Top, Bottom, Left, Right
 }
 
-class Cube(private val board: Grid<Char>, private val startingPoint: Point, private val size: Int) {
+class Cube(
+    private val board: Grid<Char>,
+    private val startingPoint: Point,
+    private val size: Int,
+    configuration: (Cube) -> Unit
+) {
 
     private val sides = mutableListOf<Side>()
 
     init {
-        addSide(1, Point(8, 0))
-        addSide(2, Point(0, 4))
-        addSide(3, Point(4, 4))
-        addSide(4, Point(8, 4))
-        addSide(5, Point(8, 8))
-        addSide(6, Point(12, 8))
-
-        sideOf(1).addConnection(Left, 3, { prev -> Point(prev.y, 0) }, Point(0, 1))
-        sideOf(1).addConnection(Top, 5, { prev -> Point(prev.x, size - 1) }, Point(0, -1))
-        sideOf(1).addConnection(Right, 6, { prev -> Point(size - 1, size - 1 - prev.y) }, Point(-1, 0))
-
-        sideOf(4).addConnection(Right, 6, { prev -> Point(size - 1 - prev.y, 0) }, Point(0, 1))
-        //----
-        sideOf(2).addConnection(Left, 6, { prev -> Point(size - 1 - prev.y, 0) }, Point(0, 1))
-        sideOf(2).addConnection(Top, 6, { prev -> Point(size - 1 - prev.y, 0) }, Point(0, 1))
-        sideOf(2).addConnection(Bottom, 6, { prev -> Point(size - 1 - prev.y, 0) }, Point(0, 1))
-
-        sideOf(3).addConnection(Top, 6, { prev -> Point(size - 1 - prev.y, 0) }, Point(0, 1))
-        sideOf(3).addConnection(Bottom, 6, { prev -> Point(size - 1 - prev.y, 0) }, Point(0, 1))
-
-        sideOf(5).addConnection(Left, 6, { prev -> Point(size - 1 - prev.y, 0) }, Point(0, 1))
-        sideOf(5).addConnection(Bottom, 6, { prev -> Point(size - 1 - prev.y, 0) }, Point(0, 1))
-
-        sideOf(6).addConnection(Top, 6, { prev -> Point(size - 1 - prev.y, 0) }, Point(0, 1))
-        sideOf(6).addConnection(Right, 6, { prev -> Point(size - 1 - prev.y, 0) }, Point(0, 1))
-        sideOf(6).addConnection(Bottom, 6, { prev -> Point(size - 1 - prev.y, 0) }, Point(0, 1))
+        configuration(this)
     }
 
     fun addSide(number: Int, leftTop: Point) {
@@ -132,7 +148,10 @@ class Cube(private val board: Grid<Char>, private val startingPoint: Point, priv
 
                             '#' -> noWall = false
                             null -> {
-                                val (wrappedNextPosition, wrappedFacingDirection) = wrap(currentPosition, facingDirection)
+                                val (wrappedNextPosition, wrappedFacingDirection) = wrap(
+                                    currentPosition,
+                                    facingDirection
+                                )
                                 if (board.getPoint(wrappedNextPosition) == '#') {
                                     noWall = false
                                 } else {
@@ -157,7 +176,7 @@ class Cube(private val board: Grid<Char>, private val startingPoint: Point, priv
         return sides.find { it.contains(point) }!!
     }
 
-    private fun sideOf(number: Int): Side {
+    fun sideOf(number: Int): Side {
         return sides.find { it.number == number }!!
     }
 
@@ -167,7 +186,7 @@ class Cube(private val board: Grid<Char>, private val startingPoint: Point, priv
             Point(0, 1) -> Bottom
             Point(-1, 0) -> Left
             Point(0, -1) -> Top
-            else -> throw IllegalArgumentException()
+            else -> throw IllegalArgumentException("Unknown edge: $this")
         }
     }
 
