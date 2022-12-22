@@ -4,17 +4,19 @@ import pl.rstanski.adventofcode2022.common.Point
 import pl.rstanski.adventofcode2022.common.Puzzle
 import pl.rstanski.adventofcode2022.common.PuzzleLoader.load
 import pl.rstanski.adventofcode2022.common.SplitLines
+import pl.rstanski.adventofcode2022.day22.common.BoardParser.parseBoard
+import pl.rstanski.adventofcode2022.day22.common.Grid
 import pl.rstanski.adventofcode2022.day22.common.Instruction
 import pl.rstanski.adventofcode2022.day22.common.InstructionsParser.parseInstructions
 import pl.rstanski.adventofcode2022.day22.common.Move
 import pl.rstanski.adventofcode2022.day22.common.PasswordCalculator
 import pl.rstanski.adventofcode2022.day22.common.Rotate
-import pl.rstanski.adventofcode2022.day22.part2.BoardParser.parseBoard
+import pl.rstanski.adventofcode2022.day22.common.StartingPointFinder.findStartingPoint
+import pl.rstanski.adventofcode2022.day22.common.printGrid
 import pl.rstanski.adventofcode2022.day22.part2.Edge.Bottom
 import pl.rstanski.adventofcode2022.day22.part2.Edge.Left
 import pl.rstanski.adventofcode2022.day22.part2.Edge.Right
 import pl.rstanski.adventofcode2022.day22.part2.Edge.Top
-import pl.rstanski.adventofcode2022.day22.part2.StartingPointFinder.findStartingPoint
 
 
 val goRight = Point(1, 0)
@@ -121,42 +123,6 @@ private fun solvePart2(puzzle: Puzzle, size: Int, configuration: (Cube, Int) -> 
     return PasswordCalculator.calculatePassword(position, facingDirection)
 }
 
-
-class Side(val number: Int, val leftTop: Point, val size: Int = 4) {
-
-    private var edgesConnections = mutableMapOf<Edge, Connection>()
-
-    fun addConnection(onWhatEdge: Edge, toWhatSide: Int, pointOnNextSide: (Point) -> Point, newDirection: Point): Side {
-        edgesConnections[onWhatEdge] = Connection(toWhatSide, pointOnNextSide, newDirection)
-        return this
-    }
-
-    fun contains(point: Point): Boolean {
-        return leftTop.x <= point.x && leftTop.y <= point.y
-                && leftTop.x + size > point.x && leftTop.y + size > point.y
-    }
-
-    fun connectionAt(currentSideEdge: Edge): Connection {
-        return edgesConnections[currentSideEdge]
-            ?: throw IllegalStateException("No connection on edge $currentSideEdge for side $number")
-    }
-
-    fun relativePosition(absolutePosition: Point): Point {
-        return absolutePosition - leftTop
-    }
-
-    fun absolutePosition(relativePosition: Point): Point {
-        return relativePosition + leftTop
-    }
-}
-
-data class Connection(val neighbourNumber: Int, val pointOnNextSide: (Point) -> Point, val newDirection: Point)
-
-
-enum class Edge {
-    Top, Bottom, Left, Right
-}
-
 class Cube(
     private val board: Grid<Char>,
     private val startingPoint: Point,
@@ -253,70 +219,37 @@ class Cube(
 }
 
 
-object BoardParser {
+class Side(val number: Int, private val leftTop: Point, private val size: Int = 4) {
 
-    fun parseBoard(mapOfTheBoard: List<String>): Grid<Char> {
-        val board = Grid<Char>()
+    private var edgesConnections = mutableMapOf<Edge, Connection>()
 
-        mapOfTheBoard.forEachIndexed { y, row ->
-            row.forEachIndexed { x, column ->
-                when (column) {
-                    ' ' -> {}
-                    else -> board.putPoint(x, y, column)
-                }
-            }
-        }
+    fun addConnection(onWhatEdge: Edge, toWhatSide: Int, pointOnNextSide: (Point) -> Point, newDirection: Point): Side {
+        edgesConnections[onWhatEdge] = Connection(toWhatSide, pointOnNextSide, newDirection)
+        return this
+    }
 
-        return board
+    fun contains(point: Point): Boolean {
+        return leftTop.x <= point.x && leftTop.y <= point.y
+                && leftTop.x + size > point.x && leftTop.y + size > point.y
+    }
+
+    fun connectionAt(currentSideEdge: Edge): Connection {
+        return edgesConnections[currentSideEdge]
+            ?: throw IllegalStateException("No connection on edge $currentSideEdge for side $number")
+    }
+
+    fun relativePosition(absolutePosition: Point): Point {
+        return absolutePosition - leftTop
+    }
+
+    fun absolutePosition(relativePosition: Point): Point {
+        return relativePosition + leftTop
     }
 }
 
-object StartingPointFinder {
-    fun findStartingPoint(mapOfTheBoard: List<String>): Point {
-        val column = mapOfTheBoard.first()
-            .mapIndexed { index, char -> index to char }
-            .find { it.second == '.' }!!
-            .first
-        return Point(column, 0)
-    }
-}
+data class Connection(val neighbourNumber: Int, val pointOnNextSide: (Point) -> Point, val newDirection: Point)
 
-class Grid<T> {
-    private val points = mutableMapOf<Point, T>()
 
-    fun putPoint(point: Point, value: T) {
-        points[point] = value
-    }
-
-    fun putPoint(x: Int, y: Int, value: T) {
-        putPoint(Point(x, y), value)
-    }
-
-    fun getPoint(point: Point): T? =
-        points[point]
-
-    fun getPoint(x: Int, y: Int): T? =
-        getPoint(Point(x, y))
-
-    fun getPointsX(x: Int): List<Point> {
-        return points.keys.filter { it.x == x }.sortedBy { it.x }
-    }
-
-    fun getPointsY(y: Int): List<Point> {
-        return points.keys.filter { it.y == y }.sortedBy { it.y }
-    }
-
-}
-
-private fun printGrid(grid: Grid<Char>, corner1: Point, corner2: Point) {
-    (corner1.y..corner2.y).forEach { y ->
-        print(y.toString().padStart(3))
-        (corner1.x..corner2.x).forEach { x ->
-            when (grid.getPoint(x, y)) {
-                null -> print(" ")
-                else -> print(grid.getPoint(x, y))
-            }
-        }
-        println()
-    }
+enum class Edge {
+    Top, Bottom, Left, Right
 }
