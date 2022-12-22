@@ -32,44 +32,82 @@ private fun solvePart2(puzzle: Puzzle): Any {
     val startingPoint = findStartingPoint(mapOfTheBoard)
     val instructions = parseInstructions(pathYouMustFollow.first())
 
-    val cube = Cube(board, startingPoint)
+    val cube = Cube(board, startingPoint, 4)
     val (position, facingDirection) = cube.go(instructions)
 
     return PasswordCalculator.calculatePassword(position, facingDirection)
 }
 
-class Side(val number: Int, val leftTop: Point, val size: Int = 4, neighbourSides: List<Pair<Edge, Pair<Edge, Int>>> = emptyList()) {
+
+class Side(val number: Int, val leftTop: Point, val size: Int = 4) {
+
+    private var edgesConnections = mutableMapOf<Edge, Connection>()
+
+    fun addConnection(onWhatEdge: Edge, toWhatSide: Int, pointOnNextSide: (Point) -> Point, newDirection: Point) {
+        edgesConnections[onWhatEdge] = Connection(toWhatSide, pointOnNextSide, newDirection)
+    }
 
     fun contains(point: Point): Boolean {
         return leftTop.x <= point.x && leftTop.y <= point.y
-            && leftTop.x + size > point.x && leftTop.y + size > point.y
+                && leftTop.x + size > point.x && leftTop.y + size > point.y
     }
 
-    fun findStickFor(neighbourSide: Int): Pair<Edge, Edge> {
-        TODO("Not yet implemented")
+    fun connectionAt(currentSideEdge: Edge): Connection {
+        return edgesConnections[currentSideEdge]
+            ?: throw IllegalStateException("No connection on edge $currentSideEdge for side $number")
     }
 
-    fun neighbourAt(currentSideEdge: Edge): Triple<Int, Int, Int> {
-        TODO("Not yet implemented")
+    fun relativePosition(absolutePosition: Point): Point {
+        return absolutePosition - leftTop
+    }
+
+    fun absolutePosition(relativePosition: Point): Point {
+        return relativePosition + leftTop
     }
 }
+
+data class Connection(val neighbourNumber: Int, val pointOnNextSide: (Point) -> Point, val newDirection: Point)
 
 
 enum class Edge {
     Top, Bottom, Left, Right
 }
 
-class Cube(private val board: Grid<Char>, private val startingPoint: Point) {
+class Cube(private val board: Grid<Char>, private val startingPoint: Point, private val size: Int) {
 
     private val sides = mutableListOf<Side>()
 
     init {
-        sides += Side(1, Point(8, 0))
-        sides += Side(2, Point(0, 4))
-        sides += Side(3, Point(4, 4))
-        sides += Side(4, Point(8, 4))
-        sides += Side(5, Point(8, 8))
-        sides += Side(6, Point(12, 8))
+        addSide(1, Point(8, 0))
+        addSide(2, Point(0, 4))
+        addSide(3, Point(4, 4))
+        addSide(4, Point(8, 4))
+        addSide(5, Point(8, 8))
+        addSide(6, Point(12, 8))
+
+        sideOf(1).addConnection(Left, 3, { prev -> Point(prev.y, 0) }, Point(0, 1))
+        sideOf(1).addConnection(Top, 5, { prev -> Point(prev.x, size - 1) }, Point(0, -1))
+        sideOf(1).addConnection(Right, 6, { prev -> Point(size - 1, size - 1 - prev.y) }, Point(-1, 0))
+
+        sideOf(4).addConnection(Right, 6, { prev -> Point(size - 1 - prev.y, 0) }, Point(0, 1))
+        //----
+        sideOf(2).addConnection(Left, 6, { prev -> Point(size - 1 - prev.y, 0) }, Point(0, 1))
+        sideOf(2).addConnection(Top, 6, { prev -> Point(size - 1 - prev.y, 0) }, Point(0, 1))
+        sideOf(2).addConnection(Bottom, 6, { prev -> Point(size - 1 - prev.y, 0) }, Point(0, 1))
+
+        sideOf(3).addConnection(Top, 6, { prev -> Point(size - 1 - prev.y, 0) }, Point(0, 1))
+        sideOf(3).addConnection(Bottom, 6, { prev -> Point(size - 1 - prev.y, 0) }, Point(0, 1))
+
+        sideOf(5).addConnection(Left, 6, { prev -> Point(size - 1 - prev.y, 0) }, Point(0, 1))
+        sideOf(5).addConnection(Bottom, 6, { prev -> Point(size - 1 - prev.y, 0) }, Point(0, 1))
+
+        sideOf(6).addConnection(Top, 6, { prev -> Point(size - 1 - prev.y, 0) }, Point(0, 1))
+        sideOf(6).addConnection(Right, 6, { prev -> Point(size - 1 - prev.y, 0) }, Point(0, 1))
+        sideOf(6).addConnection(Bottom, 6, { prev -> Point(size - 1 - prev.y, 0) }, Point(0, 1))
+    }
+
+    fun addSide(number: Int, leftTop: Point) {
+        sides += Side(number, leftTop, size)
     }
 
     fun go(instructions: List<Instruction>): Pair<Point, Point> {
@@ -91,10 +129,11 @@ class Cube(private val board: Grid<Char>, private val startingPoint: Point) {
                                 stepsTaken++
                                 nextPosition = currentPosition + facingDirection
                             }
+
                             '#' -> noWall = false
                             null -> {
-                                val (wrappedNextPosition, wrappedFacingDirection) = wrap(currentPosition, nextPosition, facingDirection)
-                                if (board.getPoint(nextPosition) == '#') {
+                                val (wrappedNextPosition, wrappedFacingDirection) = wrap(currentPosition, facingDirection)
+                                if (board.getPoint(wrappedNextPosition) == '#') {
                                     noWall = false
                                 } else {
                                     nextPosition = wrappedNextPosition
@@ -104,6 +143,7 @@ class Cube(private val board: Grid<Char>, private val startingPoint: Point) {
                         }
                     }
                 }
+
                 is Rotate -> facingDirection = instruction.rotate(facingDirection)
             }
         }
@@ -113,112 +153,37 @@ class Cube(private val board: Grid<Char>, private val startingPoint: Point) {
         return currentPosition to facingDirection
     }
 
-    private val transitions: Map<Pair<Int, Int>, Transition> = mutableMapOf()
-
-    sealed interface Transition {
-        fun transit(nextPosition: Point, facingDirection: Point): Pair<Point, Point>
-    }
-
-    object NoChangesTransition : Transition {
-        override fun transit(nextPosition: Point, facingDirection: Point): Pair<Point, Point> {
-            return nextPosition to facingDirection
-        }
-    }
-
-    sealed class Change
-
-    object TakeX : Change()
-    object TakeY : Change()
-    object TakeMin : Change()
-    object TakeMax : Change()
-    object TakeXReversed : Change()
-
-    object TakeYReversed : Change()
-
-    data class ChangeXYTransition(val x: Change, val y: Change) : Transition {
-        override fun transit(nextPosition: Point, facingDirection: Point): Pair<Point, Point> {
-            return Point(nextPosition.y, nextPosition.x) to facingDirection
-        }
-    }
-
-    data class DirectionTransition(val x: Int, val y:Int): Transition {
-        override fun transit(nextPosition: Point, facingDirection: Point): Pair<Point, Point> {
-            TODO("Not yet implemented")
-        }
-
-    }
-
-
-
     private fun sideFor(point: Point): Side {
         return sides.find { it.contains(point) }!!
     }
 
-    private fun Point.toEdge(): Edge {
-        TODO()
+    private fun sideOf(number: Int): Side {
+        return sides.find { it.number == number }!!
     }
 
-    private fun wrap(currentPosition: Point, nextPosition: Point, facingDirection: Point): Pair<Point, Point> {
+    private fun Point.toEdge(): Edge {
+        return when (this) {
+            Point(1, 0) -> Right
+            Point(0, 1) -> Bottom
+            Point(-1, 0) -> Left
+            Point(0, -1) -> Top
+            else -> throw IllegalArgumentException()
+        }
+    }
+
+    private fun wrap(currentPosition: Point, facingDirection: Point): Pair<Point, Point> {
         val currentSide = sideFor(currentPosition)
         val currentSideEdge = facingDirection.toEdge()
-        val (neighbourSide, rotate, negate) = currentSide.neighbourAt(currentSideEdge)
+        val connection = currentSide.connectionAt(currentSideEdge)
 
-        when (rotate) {
-            0 -> currentPosition
-            90 -> Point()
-            180 -> {}
-            270 -> {}
-            else -> throw IllegalArgumentException("Unknown rotate: $rotate")
-        }
+        val nextSide = sideOf(connection.neighbourNumber)
 
-        // private val rotate = listOf(Point(1, 0), Point(0, 1), Point(-1, 0), Point(0, -1))
+        val relativeCurrentPosition = currentSide.relativePosition(currentPosition)
+        val absoluteNextPosition = nextSide.absolutePosition(connection.pointOnNextSide(relativeCurrentPosition))
 
-
-
-        val nextSide = sideFor(nextPosition)
-
-        if (currentSide.number == nextSide.number) {
-            return nextPosition to facingDirection
-        } else {
-            val stickFromTo = currentSide.findStickFor(nextSide.number)
-            TODO()
-        }
-    }
-
-    private fun transition(fromEdge: Edge, toEdge: Edge) {
-        // Top, Bottom, Left, Right
-        val edgeTransition = fromEdge to toEdge
-
-        when (edgeTransition) {
-            Top to Bottom -> listOf(NoChangesTransition)
-            Top to Left -> listOf(ChangeXYTransition(TakeMin, TakeX), DirectionTransition(1, 0))
-            Top to Right -> listOf(ChangeXYTransition(TakeMax, TakeXReversed), DirectionTransition(-1, 0))
-            Top to Top -> listOf(DirectionTransition(0, -1))
-        }
-
-        Top to Bottom
-        Top to Left
-        Top to Right
-        Top to Top
-
-        Bottom to Bottom
-        Bottom to Left
-        Bottom to Right
-        Bottom to Top
-
-        Left to Bottom
-        Left to Left
-        Left to Right
-        Left to Top
-
-        Right to Bottom
-        Right to Left
-        Right to Right
-        Right to Top
+        return absoluteNextPosition to connection.newDirection
     }
 }
-
-
 
 
 object BoardParser {

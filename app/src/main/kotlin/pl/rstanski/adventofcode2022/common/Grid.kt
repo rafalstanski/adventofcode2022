@@ -50,6 +50,9 @@ data class Point(
 
     operator fun plus(otherPoint: Point): Point =
         Point(x + otherPoint.x, y + otherPoint.y)
+
+    operator fun minus(otherPoint: Point): Point =
+        Point(x - otherPoint.x, y - otherPoint.y)
 }
 
 class PointOutOfGridException(point: Point) : IllegalArgumentException("Point $point is out of grid")
