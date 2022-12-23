@@ -1,6 +1,5 @@
 package pl.rstanski.adventofcode2022.day23.part1
 
-import java.math.BigInteger
 import pl.rstanski.adventofcode2022.common.Point
 import pl.rstanski.adventofcode2022.common.Puzzle
 import pl.rstanski.adventofcode2022.common.PuzzleLoader.load
@@ -12,15 +11,13 @@ import pl.rstanski.adventofcode2022.day23.part1.Direction.west
 fun main() {
     val testSolution = solvePart1(load("day23sample.txt"))
     println("test solution: $testSolution")
-    check(testSolution == BigInteger("152"))
+    check(testSolution == 110)
 
     val solution = solvePart1(load("day23.txt"))
     println("solution: $solution")
 }
 
 private fun solvePart1(puzzle: Puzzle): Any {
-    //The scan shows Elves # and empty ground .;
-
     val grid = Grid<Char>()
     val elfs = mutableListOf<Elf>()
 
@@ -38,26 +35,18 @@ private fun solvePart1(puzzle: Puzzle): Any {
     printGrid(grid, Point(0, 0), Point(20, 12))
 
     repeat(10) { round ->
-
         val proposedMoves = elfs.associate { it.index to it.proposeMove(grid) }
-//        if (round == 1) {
-//            val elf = elfs.find { it.position == Point(".......#".length - 1, 1) }!!
-//            println(elf)
-//            println(proposedMoves[elf.index])
-//            println(proposedMoves.filter { it.value == proposedMoves[elf.index] })
-//        }
 
         proposedMoves.forEach { (elfIndex, proposedMove) ->
             if (proposedMove != null && proposedMoves.values.count { it == proposedMove } == 1) {
                 elfs[elfIndex].makeMove(grid, proposedMove)
             }
         }
-        println("round ${round + 1} ************************************")
-        printGrid(grid, Point(0, 0), Point(20, 12))
     }
 
     val (min, max) = grid.getArea()
-    val allPoints = (max.x - min.x) * (max.y - min.y)
+    val allPoints = (max.x - min.x + 1) * (max.y - min.y + 1)
+
     println("$min $max $allPoints")
     println("${grid.countPoints()}")
 
@@ -74,17 +63,20 @@ data class Elf(val index: Int, var position: Point) {
     private var propositionIndex = -1
 
     fun proposeMove(grid: Grid<Char>): Point? {
-        val noNeighbours = (1..4)
-            .map { it to noNeighboursAt(propositionAt(propositionIndex + it), grid) }
-            .find { it.second }
+        val neighboursExists = (1..4)
+            .map { propositionAt(propositionIndex + it) }
+            .map { it to neighboursExistsAt(it, grid) }
 
-        return if (noNeighbours != null) {
-            propositionIndex += noNeighbours.first
-            propositionFor(propositionAt(propositionIndex))
-        } else {
-            propositionIndex++
+        val proposedMove = if (neighboursExists.count { !it.second }  == 4 || neighboursExists.count { it.second }  == 4) {
+            // no neighbours for all sides
             null
+        } else {
+            // propose for the first non-existing
+            propositionFor(neighboursExists.find { !it.second }!!.first)
         }
+        propositionIndex++
+
+        return proposedMove
     }
 
     private fun propositionAt(index: Int): Direction {
@@ -100,14 +92,14 @@ data class Elf(val index: Int, var position: Point) {
         }
     }
 
-    private fun noNeighboursAt(direction: Direction, grid: Grid<Char>): Boolean {
+    private fun neighboursExistsAt(direction: Direction, grid: Grid<Char>): Boolean {
         val neighbours = when (direction) {
             north -> (-1..1).map { Point(position.x + it, position.y - 1) }
             south -> (-1..1).map { Point(position.x + it, position.y + 1) }
-            west -> (-1..1).map { Point(position.x - 1, position.y + it) } // zachod
+            west -> (-1..1).map { Point(position.x - 1, position.y + it) }
             east -> (-1..1).map { Point(position.x + 1, position.y + it) }
         }
-        return neighbours.all { grid.getPoint(it) == null }
+        return neighbours.any { grid.getPoint(it) != null }
     }
 
 
